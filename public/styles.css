@@ -1,0 +1,120 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: black;
+    font-family: 'Ubuntu', sans-serif;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+#login {
+    font-size: 1.25rem;
+    font-weight: bold;
+    padding: 30px 50px 30px;
+    border: none;
+    cursor: pointer;
+    border-radius: 50px;
+    background-color: 	hsla(141, 73%, 42%, 0.85);
+    color: black;
+    transform: translateY(-50%);
+}
+
+#login:hover {
+    background-color: hsla(141, 73%, 42%, 0.95);
+}
+
+#main {
+    flex-direction: row;
+    background-color: hsl(0, 0%, 13%);
+    width: 80vw;
+    height: 80vh;
+    border-radius: 20px;
+}
+
+#playlists {
+    background-color: hsl(0, 0%, 13%);
+    width: 40%;
+    height: 100%;
+    border-radius: inherit;
+    overflow-y: auto;
+}
+
+#player {
+    background-color: hsla(141, 73%, 42%, 0.75);;
+    width: 60%;
+    height: 100%;
+    border-radius: inherit;
+}
+
+.instruction {
+    color: grey;
+    text-align: center;
+    font-weight: bold;
+    font-size: 2rem;
+}
+
+.playlist {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 20px 10px;
+    padding: 10px;
+    border-radius: 15px;
+}
+
+.playlist:hover {
+    cursor: pointer;
+    background-color: #555;
+}
+
+.currentlyPlaying {
+    filter: brightness(50%);
+}
+
+.playingImg {
+    margin-left: auto;
+    border-radius: 10px;
+}
+
+.selectedPlaylist {
+    background-color: hsla(0, 0%, 33%, 0.8);
+}
+
+.playlistName {
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.playlistImage {
+    max-width: 200px;
+    max-height: 200px;
+    margin-right: 20px;
+    border-radius: 15px;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+::-webkit-scrollbar-track {
+    background: hsl(0, 0%, 13%);
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: #555;
+}
