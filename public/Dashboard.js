@@ -6,6 +6,7 @@ export function getDashboard() {
     getUserPlayLists();
 }
 
+// Get request to get user's playlists
 async function getUserPlayLists() {
     const result = await fetch(redirect_uri + "getPlaylists", {
         method: "GET",
@@ -18,6 +19,7 @@ async function getUserPlayLists() {
     displayPlaylists(data);
 }
 
+// Displays user's playlists
 function displayPlaylists(playlists) {
     // Displays user's playlists
     for(let i = 0; i < playlists.length; i++) {
@@ -71,3 +73,36 @@ function changeSelectedPlaylist(playlistIndex) {
         selectedPlaylist = playlistIndex;  
     }
 }
+
+//For sliders interaction
+const progressSlider = document.getElementById('musicProgress');
+progressSlider.addEventListener("input", (event) => {
+    const sliderValue = progressSlider.value;
+    progressSlider.style.background = `linear-gradient(to right, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
+});
+
+progressSlider.addEventListener("mouseover", (event) => {
+    const sliderValue = progressSlider.value;
+    progressSlider.style.background = `linear-gradient(to right, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
+});
+
+progressSlider.addEventListener("mouseout", (event) => {
+    const sliderValue = progressSlider.value;
+    progressSlider.style.background = `linear-gradient(to right, #ffffff ${sliderValue}%, #ccc ${sliderValue}%)`;
+});
+
+const volumeSlider = document.getElementById('volumeSlider');
+volumeSlider.addEventListener("input", (event) => {
+    const sliderValue = volumeSlider.value;
+    volumeSlider.style.background = `linear-gradient(to top, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
+});
+
+volumeSlider.addEventListener("mouseover", (event) => {
+    const sliderValue = volumeSlider.value;
+    volumeSlider.style.background = `linear-gradient(to top, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
+});
+
+volumeSlider.addEventListener("mouseout", (event) => {
+    const sliderValue = volumeSlider.value;
+    volumeSlider.style.background = `linear-gradient(to top, #ffffff ${sliderValue}%, #ccc ${sliderValue}%)`;
+});

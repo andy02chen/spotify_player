@@ -5,6 +5,10 @@ body {
     font-family: 'Ubuntu', sans-serif;
 }
 
+img {
+    -webkit-user-drag: none;
+}
+
 .container {
     display: flex;
     justify-content: center;
@@ -47,10 +51,14 @@ body {
 }
 
 #player {
-    background-color: hsla(141, 73%, 42%, 0.75);;
+    background-color: hsla(141, 73%, 42%, 0.75);
     width: 60%;
     height: 100%;
     border-radius: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
 }
 
 .instruction {
@@ -118,4 +126,112 @@ body {
 
 ::-webkit-scrollbar-thumb:active {
     background: #555;
+}
+
+#playerControls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: hsla(141, 73%, 42%, 0.75);
+    width: 90%;
+    height: 90%;
+    border-radius: 20px;
+}
+
+#volume {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    left: 78%;
+}
+
+#music {
+    text-align: center;
+    width: 60%;
+}
+
+.songImage {
+    border-radius: 15px;
+    width: 400px;
+}
+
+.songName {
+    color: white
+}
+
+.songArtist {
+    color: black;
+}
+
+.controlButton, #playPauseButton, #musicProgress, #volumeSlider {
+    cursor: pointer;
+}
+
+.progressContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.startTime {
+    margin-right: 10px;
+}
+
+.finishTime {
+    margin-left: 10px;
+}
+
+#musicProgress{
+    appearance: none;
+    width: 100%;
+    cursor: pointer;
+    outline: none;
+    border-radius: 15px;
+    height: 8px;
+    background: #ccc;
+    border: 1px solid #ccc;
+}
+
+#musicProgress::-webkit-slider-thumb {
+    appearance: none;
+    height: 8px;
+    width: 8px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    border: none;
+    transition: .2s ease-in-out;
+}
+
+#musicProgress::-webkit-slider-thumb:hover {
+    background-color: white;
+    width: 16px;
+    height: 16px;
+}
+
+#volumeSlider {
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+    width: 8px;
+    border-radius: 15px;
+    background: #ccc;
+    border: 1px solid #ccc;
+}
+
+#volumeSlider::-webkit-slider-thumb {
+    appearance: none;
+    height: 8px;
+    width: 8px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    border: none;
+    transition: .2s ease-in-out;
+}
+
+#volumeSlider::-webkit-slider-thumb:hover {
+    background-color: white;
+    width: 16px;
+    height: 16px;
 }

@@ -45,6 +45,27 @@
                 </div>
                 <div id="player">
                     <!-- TODO Design the music player -->
+                    <div id="playerControls">
+                        <div id="music">
+                            <img class="songImage" src="imgs/ok.jpeg" alt="image of song">
+                            <h1 class="songName">Song Name</h1>
+                            <h1 class="songArtist">Artist</h1>
+                            <button class="controlButton" id="prevSong">Prev</button>
+                            <button id="playPauseButton">Play</button>
+                            <button class="controlButton" id="nextSong">Next</button>
+                            <button class="controlButton" id="loopSong">Loop</button>
+                            <br>
+                            <div class="progressContainer">
+                                <span class="startTime">0:40</span>
+                                <input type="range" value="0" id="musicProgress">
+                                <span class="finishTime">3:40</span>
+                            </div>
+                            
+                        </div>
+                        <div id="volume">
+                            <input type="range" value="0" id="volumeSlider" style="writing-mode: vertical-lr; direction: rtl">Volume
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>            
