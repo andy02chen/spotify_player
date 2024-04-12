@@ -38,34 +38,36 @@ function displayPlaylists(playlists) {
         playlistDisplay.appendChild(playlistName);
 
         playlistDisplay.onclick = () => {
-            changeSelectedPlaylistHighlight(i);
+            changeSelectedPlaylist(i);
         }
 
         document.getElementById("playlists").appendChild(playlistDisplay);
     }
 }
 
-// Fix bug when playlist is already selected
 //Changes selected playlist
-function changeSelectedPlaylistHighlight(playlistIndex) {
+function changeSelectedPlaylist(playlistIndex) {
     const playlists = document.querySelectorAll(".playlist");
     const playlist = playlists[playlistIndex];
-    const playlistImg = playlist.getElementsByClassName("playlistImage")[0];
 
-    playlist.classList.add("selectedPlaylist");
-    playlistImg.classList.add("currentlyPlaying");
+    if(selectedPlaylist !== playlistIndex) {
+        const playlistImg = playlist.getElementsByClassName("playlistImage")[0];
 
-    const addImage = document.createElement("img");
-    addImage.src = "imgs/playing.png";
-    addImage.alt = "Image of currently playing playlist";
-    addImage.classList.add("playingImg");
-    playlist.appendChild(addImage);
+        playlist.classList.add("selectedPlaylist");
+        playlistImg.classList.add("currentlyPlaying");
 
-    if(selectedPlaylist !== null) {
-        playlists[selectedPlaylist].classList.remove("selectedPlaylist");
-        playlists[selectedPlaylist].getElementsByClassName("playlistImage")[0].classList.remove("currentlyPlaying");
-        playlists[selectedPlaylist].removeChild(playlists[selectedPlaylist].lastChild);
+        const addImage = document.createElement("img");
+        addImage.src = "imgs/playing.png";
+        addImage.alt = "Image of currently playing playlist";
+        addImage.classList.add("playingImg");
+        playlist.appendChild(addImage);
+
+        if(selectedPlaylist !== null) {
+            playlists[selectedPlaylist].classList.remove("selectedPlaylist");
+            playlists[selectedPlaylist].getElementsByClassName("playlistImage")[0].classList.remove("currentlyPlaying");
+            playlists[selectedPlaylist].removeChild(playlists[selectedPlaylist].lastChild);
+        }
+        
+        selectedPlaylist = playlistIndex;  
     }
-    
-    selectedPlaylist = playlistIndex;
 }
