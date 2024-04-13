@@ -1,6 +1,12 @@
 const redirect_uri = "http://localhost:3000/";
 let selectedPlaylist = null;
 
+// Volume selection
+let volumeControl = 20;
+const volumeImageElement = document.getElementById("volumeImage");
+let muted = false;
+const volumeSlider = document.getElementById('volumeSlider');
+
 export function getDashboard() {
     document.getElementById('main').style.display = 'flex';
     getUserPlayLists();
@@ -74,7 +80,7 @@ function changeSelectedPlaylist(playlistIndex) {
     }
 }
 
-//For sliders interaction
+//For progress sliders interaction
 const progressSlider = document.getElementById('musicProgress');
 progressSlider.addEventListener("input", (event) => {
     const sliderValue = progressSlider.value;
@@ -91,10 +97,70 @@ progressSlider.addEventListener("mouseout", (event) => {
     progressSlider.style.background = `linear-gradient(to right, #ffffff ${sliderValue}%, #ccc ${sliderValue}%)`;
 });
 
-const volumeSlider = document.getElementById('volumeSlider');
+// For volume sliders interaction
+// For muting
+volumeImageElement.addEventListener("click", event => {
+    if(!muted && volumeControl > 0) {
+        muted = true;
+        volumeImageElement.src = "imgs/volume-mute.png";
+        volumeImageElement.alt = "Mute";
+
+    } else {
+        muted = false;
+
+        switch(true) {
+            case volumeControl == 0:
+                volumeImageElement.src = "imgs/volume-mute.png";
+                volumeImageElement.alt = "Mute";
+                break;
+    
+            case (volumeControl >= 1 && volumeControl < 34):
+                volumeImageElement.src = "imgs/volume-low.png";
+                volumeImageElement.alt = "Low";
+                break;
+    
+            case (volumeControl >= 34 && volumeControl < 67):
+                volumeImageElement.src = "imgs/volume-med.png";
+                volumeImageElement.alt = "Med";
+                break;
+    
+            case (volumeControl >= 67 && volumeControl <= 100):
+                volumeImageElement.src = "imgs/volume-high.png";
+                volumeImageElement.alt = "High";
+                break;
+        }
+    }
+});
+
 volumeSlider.addEventListener("input", (event) => {
     const sliderValue = volumeSlider.value;
     volumeSlider.style.background = `linear-gradient(to top, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
+    muted = false;
+    
+    switch(true) {
+        case sliderValue == 0:
+            muted = true;
+            volumeImageElement.src = "imgs/volume-mute.png";
+            volumeImageElement.alt = "Mute";
+            break;
+
+        case (sliderValue >= 1 && sliderValue < 34):
+            volumeImageElement.src = "imgs/volume-low.png";
+            volumeImageElement.alt = "Low";
+            break;
+
+        case (sliderValue >= 34 && sliderValue < 67):
+            volumeImageElement.src = "imgs/volume-med.png";
+            volumeImageElement.alt = "Med";
+            break;
+
+        case (sliderValue >= 67 && sliderValue <= 100):
+            volumeImageElement.src = "imgs/volume-high.png";
+            volumeImageElement.alt = "High";
+            break;
+    }
+
+    volumeControl = sliderValue;
 });
 
 volumeSlider.addEventListener("mouseover", (event) => {
@@ -105,4 +171,5 @@ volumeSlider.addEventListener("mouseover", (event) => {
 volumeSlider.addEventListener("mouseout", (event) => {
     const sliderValue = volumeSlider.value;
     volumeSlider.style.background = `linear-gradient(to top, #ffffff ${sliderValue}%, #ccc ${sliderValue}%)`;
+    volumeControl = sliderValue;
 });

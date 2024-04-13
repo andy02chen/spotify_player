@@ -173,6 +173,7 @@ img {
     display: flex;
     flex-direction: row;
     align-items: center;
+    margin-top: 20px;
 }
 
 .startTime {
@@ -181,6 +182,11 @@ img {
 
 .finishTime {
     margin-left: 10px;
+}
+
+.useless {
+    pointer-events: none;
+    visibility: hidden;
 }
 
 #musicProgress{
@@ -234,4 +240,22 @@ img {
     background-color: white;
     width: 16px;
     height: 16px;
+}
+
+.songName {
+    font-size: 3rem;
+    font-weight: bold;
+}
+
+.songArtist {
+    font-size: 2rem;
+}
+
+.volumeImage {
+    margin-top: 10px;
+    width: auto;    
+    max-height: 30px;
+    cursor: pointer;
+    background-color: black;
+    border-radius: 30px;
 }
