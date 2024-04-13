@@ -9,6 +9,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+        <script src="https://kit.fontawesome.com/efc9e69161.js" crossorigin="anonymous"></script>
         <script src="index.js" type="module"></script>
     </head>
     <body>
@@ -50,12 +51,23 @@
                             <img class="songImage" src="imgs/ok.jpeg" alt="image of song">
                             <h1 class="songName">Song Name</h1>
                             <h1 class="songArtist">Artist</h1>
-                            <button class="useless">Temp</button>
-                            <button class="controlButton" id="prevSong">Prev</button>
-                            <button id="playPauseButton">Play</button>
-                            <button class="controlButton" id="nextSong">Next</button>
-                            <button class="controlButton" id="loopSong">Loop</button>
-                            <br>
+
+                            <div class="buttonContainer">
+                                <button class="useless">Temp</button>
+                                <button class="controlButton" id="prevSong">
+                                    <i class="fa-solid fa-backward-step"></i>
+                                </button>
+                                <button id="playPauseButton">
+                                    <!-- <i class="fa-solid fa-play"></i> -->
+                                    <!-- <i class="fa-solid fa-pause"></i> -->
+                                </button>
+                                <button class="controlButton" id="nextSong">
+                                    <i class="fa-solid fa-forward-step"></i>
+                                </button>
+                                <button class="controlButton" id="loopSong">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </button>
+                            </div>
                             <div class="progressContainer">
                                 <span class="startTime">0:40</span>
                                 <input type="range" value="0" id="musicProgress">

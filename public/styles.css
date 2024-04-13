@@ -259,3 +259,51 @@ img {
     background-color: black;
     border-radius: 30px;
 }
+
+.buttonContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.controlButton {
+    font-size: 1.5rem;
+    margin: 10px;
+    background: none;
+    border: none;
+    color: #ccc;
+    transition: transform 0.2 ease-in-out;
+}
+
+#playPauseButton {
+    font-size: 2.5rem;
+    margin: 10px;
+    border-radius: 50%;
+    height: 75px;
+    width: 75px;
+    border: none;
+    transition: transform 0.2 ease-in-out;
+}
+
+#playPauseButton:hover, .controlButton:hover {
+    transform: scale(1.1);
+    filter: brightness(1.2);
+}
+
+#playPauseButton:active, .controlButton:active {
+    transform: scale(0.95);
+}
+
+.spinLoopButton {
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(360deg);
+    }
+    to {
+        transform: rotate(0deg);
+    }
+}

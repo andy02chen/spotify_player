@@ -173,3 +173,35 @@ volumeSlider.addEventListener("mouseout", (event) => {
     volumeSlider.style.background = `linear-gradient(to top, #ffffff ${sliderValue}%, #ccc ${sliderValue}%)`;
     volumeControl = sliderValue;
 });
+
+// For loop song
+const loopSong = document.getElementById("loopSong");
+let looping = false;
+
+loopSong.addEventListener("click", event => {
+    if(!looping) {
+        looping = true;
+        loopSong.classList.add("spinLoopButton");
+    } else {
+        looping = false;
+        loopSong.classList.remove("spinLoopButton");
+    }
+});
+
+// For play/pause button
+const playPauseButton = document.getElementById("playPauseButton");
+let play = true;
+const state = document.createElement("i");
+state.className = "fa-solid fa-pause";
+playPauseButton.appendChild(state);
+
+playPauseButton.addEventListener("click", event => {
+    if(play) {
+        play = false;
+        state.className = "fa-solid fa-play";
+    } else {
+        play = true;
+        state.className = "fa-solid fa-pause";
+    }
+    playPauseButton.appendChild(state);
+});
