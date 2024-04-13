@@ -48,34 +48,38 @@
                     <!-- TODO Design the music player -->
                     <div id="playerControls">
                         <div id="music">
-                            <img class="songImage" src="imgs/ok.jpeg" alt="image of song">
-                            <h1 class="songName">Song Name</h1>
-                            <h1 class="songArtist">Artist</h1>
+                            <div id="notPlaying">
+                                <h1 class="large">Not Playing</h1>
+                            </div>
+                            <div id="playing" style="display: none;">
+                                <img class="songImage" src="imgs/ok.jpeg" alt="image of song">
+                                <h1 class="songName">Song Name</h1>
+                                <h1 class="songArtist">Artist</h1>
 
-                            <div class="buttonContainer">
-                                <button class="useless">Temp</button>
-                                <button class="controlButton" id="prevSong">
-                                    <i class="fa-solid fa-backward-step"></i>
-                                </button>
-                                <button id="playPauseButton">
-                                    <!-- <i class="fa-solid fa-play"></i> -->
-                                    <!-- <i class="fa-solid fa-pause"></i> -->
-                                </button>
-                                <button class="controlButton" id="nextSong">
-                                    <i class="fa-solid fa-forward-step"></i>
-                                </button>
-                                <button class="controlButton" id="loopSong">
-                                    <i class="fa-solid fa-rotate-left"></i>
-                                </button>
+                                <div class="buttonContainer">
+                                    <button class="useless">Temp</button>
+                                    <button class="controlButton" id="prevSong">
+                                        <i class="fa-solid fa-backward-step"></i>
+                                    </button>
+                                    <button id="playPauseButton">
+                                        <!-- <i class="fa-solid fa-play"></i> -->
+                                        <!-- <i class="fa-solid fa-pause"></i> -->
+                                    </button>
+                                    <button class="controlButton" id="nextSong">
+                                        <i class="fa-solid fa-forward-step"></i>
+                                    </button>
+                                    <button class="controlButton" id="loopSong">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                </div>
+                                <div class="progressContainer">
+                                    <span class="startTime">0:40</span>
+                                    <input type="range" value="0" id="musicProgress">
+                                    <span class="finishTime">3:40</span>
+                                </div>
                             </div>
-                            <div class="progressContainer">
-                                <span class="startTime">0:40</span>
-                                <input type="range" value="0" id="musicProgress">
-                                <span class="finishTime">3:40</span>
-                            </div>
-                            
                         </div>
-                        <div id="volume">
+                        <div id="volume" style="display: none;">
                             <input type="range" value="20" id="volumeSlider" style="writing-mode: vertical-lr; direction: rtl">
                             <img id="volumeImage" class="volumeImage" src="imgs/volume-low.png">
                         </div>

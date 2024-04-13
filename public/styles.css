@@ -307,3 +307,8 @@ img {
         transform: rotate(0deg);
     }
 }
+
+.large {
+    font-size: 4rem;
+    font-weight: bold;
+}

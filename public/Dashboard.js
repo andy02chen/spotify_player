@@ -58,6 +58,10 @@ function changeSelectedPlaylist(playlistIndex) {
     const playlists = document.querySelectorAll(".playlist");
     const playlist = playlists[playlistIndex];
 
+    document.getElementById("notPlaying").style.display = "none";
+    document.getElementById("playing").style.display = "block";
+    document.getElementById("volume").style.display = "flex";
+
     if(selectedPlaylist !== playlistIndex) {
         const playlistImg = playlist.getElementsByClassName("playlistImage")[0];
 

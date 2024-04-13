@@ -18,9 +18,10 @@ loginButton.addEventListener('click', () => {
 // First function called when page is loaded
 window.addEventListener("load", (event) => {
     // To get home page without login
-    getDashboard();
+    // getDashboard();
 
-    // getHomePage();
+    // Normal Operation
+    getHomePage();
 });
 
 // Display Home Page
