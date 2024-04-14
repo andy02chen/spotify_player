@@ -7,6 +7,10 @@ const volumeImageElement = document.getElementById("volumeImage");
 let muted = false;
 const volumeSlider = document.getElementById('volumeSlider');
 
+// Music Player
+let player = null;
+let connected = false;
+
 export function getDashboard() {
     document.getElementById('main').style.display = 'flex';
     getUserPlayLists();
@@ -53,10 +57,67 @@ function displayPlaylists(playlists) {
     }
 }
 
+async function connectWebPlaybackSDK() {
+
+    const token = await fetch(redirect_uri + "getToken", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    const response = await token.json();
+    player = new Spotify.Player({
+            name: 'Better Shuffle Spotify Player',
+            getOAuthToken: cb => { cb(response.token); },
+            volume: (volumeControl / 100)
+            });
+
+    // window.onSpotifyWebPlaybackSDKReady = () => {
+    //     player = new Spotify.Player({
+    //     name: 'Better Shuffle Spotify Player',
+    //     getOAuthToken: cb => { cb(response.token); },
+    //     volume: (volumeControl / 100)
+    // });}
+
+    // Ready
+    player.addListener('ready', ({ device_id }) => {
+        console.log('Ready with Device ID', device_id);
+    });
+
+    // Not Ready
+    player.addListener('not_ready', ({ device_id }) => {
+        console.log('Device ID has gone offline', device_id);
+    });
+
+    player.addListener('initialization_error', ({ message }) => {
+        console.error(message);
+        return false;
+    });
+  
+    player.addListener('authentication_error', ({ message }) => {
+        console.error(message);
+        return false;
+    });
+  
+    player.addListener('account_error', ({ message }) => {
+        console.error(message);
+        return false;
+    });
+
+    player.connect();
+    return true;
+}
+
+
 //Changes selected playlist
 function changeSelectedPlaylist(playlistIndex) {
     const playlists = document.querySelectorAll(".playlist");
     const playlist = playlists[playlistIndex];
+
+    if(!connected) {
+        connected = connectWebPlaybackSDK();
+    }
 
     document.getElementById("notPlaying").style.display = "none";
     document.getElementById("playing").style.display = "block";
@@ -136,8 +197,9 @@ volumeImageElement.addEventListener("click", event => {
     }
 });
 
+// Changes volume when user drags the slider
 volumeSlider.addEventListener("input", (event) => {
-    const sliderValue = volumeSlider.value;
+    let sliderValue = parseFloat(volumeSlider.value);
     volumeSlider.style.background = `linear-gradient(to top, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
     muted = false;
     
@@ -165,18 +227,41 @@ volumeSlider.addEventListener("input", (event) => {
     }
 
     volumeControl = sliderValue;
+    console.log('vol',volumeControl);
 });
 
+// Allows user to change volume using mouse wheel
+volumeSlider.addEventListener("wheel", (event) => {
+    event.preventDefault();
+
+    const sliderValue = parseFloat(volumeSlider.value);
+    const delta = event.deltaY > 0 ? -1 : 1;
+
+    const step = 10;
+    const newValue = sliderValue + delta * step
+
+    const min = 0;
+    const max = 100;
+
+    volumeSlider.value = Math.min(Math.max(min, newValue), max);
+    volumeSlider.style.background = `linear-gradient(to top, #1db954 ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
+    volumeControl = parseFloat(volumeSlider.value);
+    console.log('vol2',volumeControl);
+});
+
+// Turns green when user hovers
 volumeSlider.addEventListener("mouseover", (event) => {
     const sliderValue = volumeSlider.value;
     volumeSlider.style.background = `linear-gradient(to top, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
 });
 
+// Turns white when user stops hovering
 volumeSlider.addEventListener("mouseout", (event) => {
     const sliderValue = volumeSlider.value;
     volumeSlider.style.background = `linear-gradient(to top, #ffffff ${sliderValue}%, #ccc ${sliderValue}%)`;
     volumeControl = sliderValue;
 });
+
 
 // For loop song
 const loopSong = document.getElementById("loopSong");

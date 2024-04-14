@@ -22,7 +22,12 @@ let expiresIn;
 // Home page
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
-})
+});
+
+// Returns the users token
+app.get('/getToken', (req, res) => {
+	res.send({token:accessToken});
+});
 
 // Get User Playlists
 app.get('/getPlaylists', async(req, res) => {
