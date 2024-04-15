@@ -2,7 +2,7 @@ const redirect_uri = "http://localhost:3000/";
 let selectedPlaylist = null;
 
 // Volume selection
-let volumeControl = 20;
+let volumeControl = 10;
 const volumeImageElement = document.getElementById("volumeImage");
 let muted = false;
 const volumeSlider = document.getElementById('volumeSlider');
@@ -10,10 +10,113 @@ const volumeSlider = document.getElementById('volumeSlider');
 // Music Player
 let player = null;
 let connected = false;
+let devID = null;
 
-export function getDashboard() {
+////////////////////////////////
+// Being completely honest idk wha this code does
+// But I been debugging this for a while now
+// And this works so im keeping it for now
+window.onSpotifyWebPlaybackSDKReady = () => {};
+
+async function waitForSpotifyWebPlaybackSDKToLoad () {
+    return new Promise(resolve => {
+        if (window.Spotify) {
+        resolve(window.Spotify);
+    } else {
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            resolve(window.Spotify);
+        };
+    }
+    });
+};
+
+
+////////////////////////////////
+
+// Displays info about currently playing track
+function displayPlayer() {
+    document.getElementById("notPlaying").style.display = "none";
+    document.getElementById("playing").style.display = "block";
+    document.getElementById("volume").style.display = "flex";
+
+    
+    // player.addListener('player_state_changed', ({
+    //     position,
+    //     duration,
+    //     track_window: { current_track }
+    // }) => {
+    //     console.log('Currently Playing', current_track);
+
+    //     const image = current_track.album.images[0].url;
+    //     const trackName = current_track.album.name;
+    //     const artistName = current_track.artists[0].name;
+
+    //     console.log(trackName, artistName, image);
+
+    //     // console.log('Position in Song', position);
+    //     // console.log('Duration of Song', duration);
+    // });
+    
+    console.log('////');
+    player.getCurrentState().then(state => {
+        if (!state) {
+            console.error('User is not playing music through the Web Playback SDK');
+            return;
+        }
+
+        var current_track = state.track_window.current_track;
+        var next_track = state.track_window.next_tracks[0];
+        
+        console.log('Currently Playing', current_track);
+        console.log('Playing Next', next_track);
+    });
+
+}
+
+export async function getDashboard() {
     document.getElementById('main').style.display = 'flex';
     getUserPlayLists();
+
+    connected = await connectWebPlaybackSDK();
+
+    // Ready
+    player.addListener('ready', async ({ device_id }) => {
+        console.log('Ready with Device ID', device_id);
+        if(await getPlayBackState() === true) {
+            await player.activateElement();
+            await autoSwitchSpotifyPlayer(device_id);
+            displayPlayer();
+        }
+    });
+}
+
+// Auto switch spotify player
+async function autoSwitchSpotifyPlayer(deviceID) {
+    //Gets Token
+    const token = await fetch(redirect_uri + "getToken", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    const data = await token.json();
+    
+    const response = await fetch("https://api.spotify.com/v1/me/player", {
+        method: "PUT",
+        headers: {
+            "Authorization": `Bearer ${data.token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            "device_ids": [
+                deviceID
+            ],
+            play: true
+        })
+    });
+
+    console.log(response);
 }
 
 // Get request to get user's playlists
@@ -57,8 +160,8 @@ function displayPlaylists(playlists) {
     }
 }
 
-async function connectWebPlaybackSDK() {
-
+async function getToken() {
+    //Get Token
     const token = await fetch(redirect_uri + "getToken", {
         method: "GET",
         headers: {
@@ -66,24 +169,47 @@ async function connectWebPlaybackSDK() {
         }
     });
 
-    const response = await token.json();
+    return await token.json();
+}
+
+// Determines if user is playing music elsewhere
+async function getPlayBackState() {
+    const data = await getToken();
+
+    // Get playback state
+    const result = await fetch("https://api.spotify.com/v1/me/player", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${data.token}`
+        }
+    });
+
+    if(result.status === 204) {
+        console.log('No playback state');
+
+    } else if (result.status === 200) {
+        return true;
+    } else {
+        console.error('Something went wrong');
+    }
+
+    return false;
+}
+
+// Connect to player
+async function connectWebPlaybackSDK() {
+    const { Player } = await waitForSpotifyWebPlaybackSDKToLoad();
+
+    const data = await getToken();
+
+    // Connect
     player = new Spotify.Player({
-            name: 'Better Shuffle Spotify Player',
-            getOAuthToken: cb => { cb(response.token); },
+            name: 'Shuffle Spotify',
+            getOAuthToken: cb => { cb(data.token); },
             volume: (volumeControl / 100)
             });
 
-    // window.onSpotifyWebPlaybackSDKReady = () => {
-    //     player = new Spotify.Player({
-    //     name: 'Better Shuffle Spotify Player',
-    //     getOAuthToken: cb => { cb(response.token); },
-    //     volume: (volumeControl / 100)
-    // });}
-
-    // Ready
-    player.addListener('ready', ({ device_id }) => {
-        console.log('Ready with Device ID', device_id);
-    });
+    player.activateElement();
 
     // Not Ready
     player.addListener('not_ready', ({ device_id }) => {
@@ -94,17 +220,16 @@ async function connectWebPlaybackSDK() {
         console.error(message);
         return false;
     });
-  
+
     player.addListener('authentication_error', ({ message }) => {
         console.error(message);
         return false;
     });
-  
+
     player.addListener('account_error', ({ message }) => {
         console.error(message);
         return false;
     });
-
     player.connect();
     return true;
 }
@@ -116,12 +241,11 @@ function changeSelectedPlaylist(playlistIndex) {
     const playlist = playlists[playlistIndex];
 
     if(!connected) {
+        console.log('asfsdafsa');
         connected = connectWebPlaybackSDK();
     }
 
-    document.getElementById("notPlaying").style.display = "none";
-    document.getElementById("playing").style.display = "block";
-    document.getElementById("volume").style.display = "flex";
+    displayPlayer();
 
     if(selectedPlaylist !== playlistIndex) {
         const playlistImg = playlist.getElementsByClassName("playlistImage")[0];
@@ -227,7 +351,6 @@ volumeSlider.addEventListener("input", (event) => {
     }
 
     volumeControl = sliderValue;
-    console.log('vol',volumeControl);
 });
 
 // Allows user to change volume using mouse wheel
@@ -246,7 +369,6 @@ volumeSlider.addEventListener("wheel", (event) => {
     volumeSlider.value = Math.min(Math.max(min, newValue), max);
     volumeSlider.style.background = `linear-gradient(to top, #1db954 ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
     volumeControl = parseFloat(volumeSlider.value);
-    console.log('vol2',volumeControl);
 });
 
 // Turns green when user hovers
@@ -279,18 +401,27 @@ loopSong.addEventListener("click", event => {
 
 // For play/pause button
 const playPauseButton = document.getElementById("playPauseButton");
-let play = true;
+let play = false;
 const state = document.createElement("i");
-state.className = "fa-solid fa-pause";
+state.className = "fa-solid fa-play";
 playPauseButton.appendChild(state);
 
 playPauseButton.addEventListener("click", event => {
+    // player.activateElement();
+    
     if(play) {
         play = false;
         state.className = "fa-solid fa-play";
+        player.pause().then(() => {
+            console.log('Paused!');
+        });
+
     } else {
         play = true;
         state.className = "fa-solid fa-pause";
+        player.resume().then(() => {
+            console.log('Resumed!');
+        });
     }
     playPauseButton.appendChild(state);
 });

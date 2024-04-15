@@ -21,7 +21,7 @@ let expiresIn;
 
 // Home page
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
+	res.sendFile(__dirname + '/public/index.html');
 });
 
 // Returns the users token
@@ -46,35 +46,35 @@ app.get('/getPlaylists', async(req, res) => {
 
 //Login
 app.post('/login', (req, res) => {
-  const code = req.body.code;
-  let body = `grant_type=authorization_code&code=${code}&redirect_uri=${redirect_uri}`;
+	const code = req.body.code;
+	let body = `grant_type=authorization_code&code=${code}&redirect_uri=${redirect_uri}`;
 
-  fetch(TOKEN, {
+	fetch(TOKEN, {
     method: "POST",
     headers: {
 		"Content-Type": "application/x-www-form-urlencoded",
 		"Authorization": "Basic " + btoa(client_id + ":" + client_secret) 
     },
 	body: body
-  })
-  .then(response => {
+	})
+	.then(response => {
 	if (!response.ok) {
 		console.log(response)
 		throw new Error('Bad Request');
 	}
 	return response.json();
-  })
-  .then(data => {
+	})
+	.then(data => {
 	accessToken = data.access_token;
     refresh_token = data.refresh_token;
 	expiresIn = data.expires_in;
 
 	setInterval(refreshToken, 1000 * (expiresIn - 60));
 	res.status(200).send("POST request to login was successful");
-  })
-  .catch(error => {
+	})
+	.catch(error => {
 	console.error('Error:', error);
-  });
+});
 })
 
 //Refresh access token
@@ -109,5 +109,5 @@ async function refreshToken() {
 }
 
 app.listen(port, () => {
-  console.log(`Example app listening on http://localhost:${port}`)
+	console.log(`Example app listening on http://localhost:${port}`)
 })
