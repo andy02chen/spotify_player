@@ -144,7 +144,7 @@ img {
     display: flex;
     flex-direction: column;
     align-items: center;
-    left: 78%;
+    left: 80%;
 }
 
 #music {
@@ -160,14 +160,14 @@ img {
 
 .songName {
     color: white;
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: bold;
     transition: opacity 0.5s ease-in-out;
 }
 
 .songArtist {
     color: black;
-    font-size: 2rem;
+    font-size: 1rem;
     transition: opacity 0.5s ease-in-out;
 }
 

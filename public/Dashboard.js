@@ -205,23 +205,33 @@ async function connectWebPlaybackSDK() {
     });
 
     player.addListener('player_state_changed', ({
+        paused,
         position,
         duration,
         track_window: { current_track }
     }) => {
-        console.log('Currently Playing', current_track);
-        
         
         const image = current_track.album.images[0].url;
         const trackName = current_track.name;
-        const artistName = current_track.artists[0].name;
-    
-        console.log(trackName, artistName, image);
-    
+        const artists = current_track.artists;
+
+        console.log('Currently Playing', current_track);
         console.log('Position in Song', position);
         console.log('Duration of Song', duration);
 
-        updateMusicPlayer(image, trackName, artistName, position, duration);
+        if(paused) {
+            player.pause().then(() => {
+                play = false;
+                state.className = "fa-solid fa-play";
+            });
+        } else {
+            player.resume().then(() => {
+                play = true;
+                state.className = "fa-solid fa-pause";
+            });
+        }
+
+        updateMusicPlayer(image, trackName, artists, position, duration);
     });
 
     player.connect();
@@ -230,16 +240,18 @@ async function connectWebPlaybackSDK() {
 
 // Updates music player
 // Try to make a smooth transition
-function updateMusicPlayer(image, trackName, artistName, position, duration) {
+function updateMusicPlayer(image, trackName, artists, position, duration) {
+    let artistsDisplay = artists.map(artist => artist.name).join(", ");
+
     const songImage = document.getElementById("songImage");
     const songName = document.getElementById("songName");
     const songArtist = document.getElementById("songArtist");
 
     songImage.src = image;
-    songImage.alt = `Image of ${trackName} by ${artistName}`;
+    songImage.alt = `Image of ${trackName} by ${artistsDisplay}`;
 
     songName.textContent = trackName;
-    songArtist.textContent = artistName;
+    songArtist.textContent = artistsDisplay;
     
     displayPlayer();
 }
@@ -291,6 +303,11 @@ progressSlider.addEventListener("mouseout", (event) => {
 });
 
 // TODO: Make time and progress bar work
+// TODO: shuffle when user is not playing music on desktop app
+// TODO: try to make the selected playlist appear when user starts music from desktop app
+// TODO: maybe liked songs appear on the playlists too
+// TODO: change volume slider when user changes volume on desktop app
+
 // For volume sliders interaction
 // For muting
 volumeImageElement.addEventListener("click", event => {
@@ -428,17 +445,15 @@ playPauseButton.appendChild(state);
 
 playPauseButton.addEventListener("click", event => {
     if(play) {
-        play = false;
-        state.className = "fa-solid fa-play";
         player.pause().then(() => {
-            console.log('Paused!');
+            play = false;
+            state.className = "fa-solid fa-play";
         });
 
     } else {
-        play = true;
-        state.className = "fa-solid fa-pause";
         player.resume().then(() => {
-            console.log('Resumed!');
+            play = true;
+            state.className = "fa-solid fa-pause";
         });
     }
     playPauseButton.appendChild(state);
