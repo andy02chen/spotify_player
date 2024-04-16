@@ -29,48 +29,25 @@ async function waitForSpotifyWebPlaybackSDKToLoad () {
     }
     });
 };
-
-
 ////////////////////////////////
 
 // Displays info about currently playing track
 function displayPlayer() {
     document.getElementById("notPlaying").style.display = "none";
-    document.getElementById("playing").style.display = "block";
-    document.getElementById("volume").style.display = "flex";
 
-    
-    // player.addListener('player_state_changed', ({
-    //     position,
-    //     duration,
-    //     track_window: { current_track }
-    // }) => {
-    //     console.log('Currently Playing', current_track);
+    const player = document.getElementById("playing");
+    const volume = document.getElementById("volume");
 
-    //     const image = current_track.album.images[0].url;
-    //     const trackName = current_track.album.name;
-    //     const artistName = current_track.artists[0].name;
+    player.classList.add("fade-in");
+    volume.classList.add("fade-in");
 
-    //     console.log(trackName, artistName, image);
+    player.style.display = "block";
+    volume.style.display = "flex";
 
-    //     // console.log('Position in Song', position);
-    //     // console.log('Duration of Song', duration);
-    // });
-    
-    console.log('////');
-    player.getCurrentState().then(state => {
-        if (!state) {
-            console.error('User is not playing music through the Web Playback SDK');
-            return;
-        }
-
-        var current_track = state.track_window.current_track;
-        var next_track = state.track_window.next_tracks[0];
-        
-        console.log('Currently Playing', current_track);
-        console.log('Playing Next', next_track);
-    });
-
+    setTimeout(() => {
+        player.classList.add("show");
+        volume.classList.add("show");
+    }, 100);
 }
 
 export async function getDashboard() {
@@ -83,9 +60,7 @@ export async function getDashboard() {
     player.addListener('ready', async ({ device_id }) => {
         console.log('Ready with Device ID', device_id);
         if(await getPlayBackState() === true) {
-            await player.activateElement();
             await autoSwitchSpotifyPlayer(device_id);
-            displayPlayer();
         }
     });
 }
@@ -112,7 +87,7 @@ async function autoSwitchSpotifyPlayer(deviceID) {
             "device_ids": [
                 deviceID
             ],
-            play: true
+            play: false
         })
     });
 
@@ -209,8 +184,6 @@ async function connectWebPlaybackSDK() {
             volume: (volumeControl / 100)
             });
 
-    player.activateElement();
-
     // Not Ready
     player.addListener('not_ready', ({ device_id }) => {
         console.log('Device ID has gone offline', device_id);
@@ -230,20 +203,51 @@ async function connectWebPlaybackSDK() {
         console.error(message);
         return false;
     });
+
+    player.addListener('player_state_changed', ({
+        position,
+        duration,
+        track_window: { current_track }
+    }) => {
+        console.log('Currently Playing', current_track);
+        
+        
+        const image = current_track.album.images[0].url;
+        const trackName = current_track.name;
+        const artistName = current_track.artists[0].name;
+    
+        console.log(trackName, artistName, image);
+    
+        console.log('Position in Song', position);
+        console.log('Duration of Song', duration);
+
+        updateMusicPlayer(image, trackName, artistName, position, duration);
+    });
+
     player.connect();
     return true;
 }
 
+// Updates music player
+// Try to make a smooth transition
+function updateMusicPlayer(image, trackName, artistName, position, duration) {
+    const songImage = document.getElementById("songImage");
+    const songName = document.getElementById("songName");
+    const songArtist = document.getElementById("songArtist");
+
+    songImage.src = image;
+    songImage.alt = `Image of ${trackName} by ${artistName}`;
+
+    songName.textContent = trackName;
+    songArtist.textContent = artistName;
+    
+    displayPlayer();
+}
 
 //Changes selected playlist
 function changeSelectedPlaylist(playlistIndex) {
     const playlists = document.querySelectorAll(".playlist");
     const playlist = playlists[playlistIndex];
-
-    if(!connected) {
-        console.log('asfsdafsa');
-        connected = connectWebPlaybackSDK();
-    }
 
     displayPlayer();
 
@@ -286,6 +290,7 @@ progressSlider.addEventListener("mouseout", (event) => {
     progressSlider.style.background = `linear-gradient(to right, #ffffff ${sliderValue}%, #ccc ${sliderValue}%)`;
 });
 
+// TODO: Make time and progress bar work
 // For volume sliders interaction
 // For muting
 volumeImageElement.addEventListener("click", event => {
@@ -294,15 +299,13 @@ volumeImageElement.addEventListener("click", event => {
         volumeImageElement.src = "imgs/volume-mute.png";
         volumeImageElement.alt = "Mute";
 
+        player.setVolume(0).then(() => {
+            console.log('Volume muted!');
+        });
+
     } else {
         muted = false;
-
-        switch(true) {
-            case volumeControl == 0:
-                volumeImageElement.src = "imgs/volume-mute.png";
-                volumeImageElement.alt = "Mute";
-                break;
-    
+        switch(true) {    
             case (volumeControl >= 1 && volumeControl < 34):
                 volumeImageElement.src = "imgs/volume-low.png";
                 volumeImageElement.alt = "Low";
@@ -318,15 +321,13 @@ volumeImageElement.addEventListener("click", event => {
                 volumeImageElement.alt = "High";
                 break;
         }
+        player.setVolume(volumeControl/100).then(() => {
+            console.log('Volume unmuted!');
+        });
     }
 });
 
-// Changes volume when user drags the slider
-volumeSlider.addEventListener("input", (event) => {
-    let sliderValue = parseFloat(volumeSlider.value);
-    volumeSlider.style.background = `linear-gradient(to top, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
-    muted = false;
-    
+function changeVolumeImage(sliderValue) {
     switch(true) {
         case sliderValue == 0:
             muted = true;
@@ -335,22 +336,35 @@ volumeSlider.addEventListener("input", (event) => {
             break;
 
         case (sliderValue >= 1 && sliderValue < 34):
+            muted = false;
             volumeImageElement.src = "imgs/volume-low.png";
             volumeImageElement.alt = "Low";
             break;
 
         case (sliderValue >= 34 && sliderValue < 67):
+            muted = false;
             volumeImageElement.src = "imgs/volume-med.png";
             volumeImageElement.alt = "Med";
             break;
 
         case (sliderValue >= 67 && sliderValue <= 100):
+            muted = false;
             volumeImageElement.src = "imgs/volume-high.png";
             volumeImageElement.alt = "High";
             break;
     }
+}
+
+// Changes volume when user drags the slider
+volumeSlider.addEventListener("input", (event) => {
+    let sliderValue = parseFloat(volumeSlider.value);
+    volumeSlider.style.background = `linear-gradient(to top, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
+    changeVolumeImage(sliderValue);
 
     volumeControl = sliderValue;
+    player.setVolume(volumeControl/100).then(() => {
+        console.log('Volume updated!');
+    });
 });
 
 // Allows user to change volume using mouse wheel
@@ -368,7 +382,13 @@ volumeSlider.addEventListener("wheel", (event) => {
 
     volumeSlider.value = Math.min(Math.max(min, newValue), max);
     volumeSlider.style.background = `linear-gradient(to top, #1db954 ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
+
+    changeVolumeImage(sliderValue);
+
     volumeControl = parseFloat(volumeSlider.value);
+    player.setVolume(volumeControl/100).then(() => {
+        console.log('Volume updated!');
+    });
 });
 
 // Turns green when user hovers
@@ -407,8 +427,6 @@ state.className = "fa-solid fa-play";
 playPauseButton.appendChild(state);
 
 playPauseButton.addEventListener("click", event => {
-    // player.activateElement();
-    
     if(play) {
         play = false;
         state.className = "fa-solid fa-play";

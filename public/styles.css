@@ -155,14 +155,20 @@ img {
 .songImage {
     border-radius: 15px;
     width: 400px;
+    transition: opacity 0.5s ease-in-out;
 }
 
 .songName {
-    color: white
+    color: white;
+    font-size: 3rem;
+    font-weight: bold;
+    transition: opacity 0.5s ease-in-out;
 }
 
 .songArtist {
     color: black;
+    font-size: 2rem;
+    transition: opacity 0.5s ease-in-out;
 }
 
 .controlButton, #playPauseButton, #musicProgress, #volumeSlider {
@@ -242,15 +248,6 @@ img {
     height: 16px;
 }
 
-.songName {
-    font-size: 3rem;
-    font-weight: bold;
-}
-
-.songArtist {
-    font-size: 2rem;
-}
-
 .volumeImage {
     margin-top: 10px;
     width: auto;    
@@ -311,4 +308,13 @@ img {
 .large {
     font-size: 4rem;
     font-weight: bold;
+}
+
+.fade-in {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.fade-in.show {
+    opacity: 1;
 }
