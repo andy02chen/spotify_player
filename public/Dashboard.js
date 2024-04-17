@@ -11,11 +11,14 @@ const volumeSlider = document.getElementById('volumeSlider');
 let player = null;
 let connected = false;
 let devID = null;
+let musicPlayerTimer = null;
+let currrentSongDuration = 0;
 
 ////////////////////////////////
 // Being completely honest idk wha this code does
 // But I been debugging this for a while now
 // And this works so im keeping it for now
+
 window.onSpotifyWebPlaybackSDKReady = () => {};
 
 async function waitForSpotifyWebPlaybackSDKToLoad () {
@@ -175,12 +178,12 @@ async function getPlayBackState() {
 async function connectWebPlaybackSDK() {
     const { Player } = await waitForSpotifyWebPlaybackSDKToLoad();
 
-    const data = await getToken();
-
     // Connect
     player = new Spotify.Player({
             name: 'Shuffle Spotify',
-            getOAuthToken: cb => { cb(data.token); },
+            getOAuthToken: async cb => { 
+                const data = await getToken();
+                cb(data.token); },
             volume: (volumeControl / 100)
             });
 
@@ -214,11 +217,10 @@ async function connectWebPlaybackSDK() {
         const image = current_track.album.images[0].url;
         const trackName = current_track.name;
         const artists = current_track.artists;
+        currrentSongDuration = duration
 
         console.log('Currently Playing', current_track);
         console.log('Position in Song', position);
-
-        document.getElementById("finishTime").textContent = Math.floor(duration/1000/60) + ":" + formatSeconds(Math.floor(duration/1000%60))
 
         if(paused) {
             player.pause().then(() => {
@@ -232,7 +234,7 @@ async function connectWebPlaybackSDK() {
             });
         }
 
-        updateMusicPlayer(image, trackName, artists, position, duration);
+        updateMusicPlayer(image, trackName, artists, position, paused);
     });
 
     player.connect();
@@ -251,19 +253,43 @@ function formatSeconds(seconds) {
 
 // Updates music player
 // Try to make a smooth transition
-function updateMusicPlayer(image, trackName, artists, position, duration) {
+function updateMusicPlayer(image, trackName, artists, position, paused) {
     let artistsDisplay = artists.map(artist => artist.name).join(", ");
 
     const songImage = document.getElementById("songImage");
     const songName = document.getElementById("songName");
     const songArtist = document.getElementById("songArtist");
+    progressSlider.max = currrentSongDuration;
+    progressSlider.value = position;
+    progressSlider.style.background = `linear-gradient(to right,
+        #ffffff ${progressSlider.value/currrentSongDuration*100}%,
+        #ccc ${progressSlider.value/currrentSongDuration*100}%)`;
 
     songImage.src = image;
     songImage.alt = `Image of ${trackName} by ${artistsDisplay}`;
 
     songName.textContent = trackName;
     songArtist.textContent = artistsDisplay;
+
+    document.getElementById("finishTime").textContent = Math.floor(currrentSongDuration/1000/60) + ":" + formatSeconds(Math.floor(currrentSongDuration/1000%60))
+    document.getElementById("startTime").textContent = Math.floor(position/1000/60) + ":" + formatSeconds(Math.floor(position/1000%60))
     
+    if(musicPlayerTimer !== null) {
+        clearInterval(musicPlayerTimer);
+    }
+
+    if(!paused) {
+        musicPlayerTimer = setInterval(() => {
+            document.getElementById("startTime").textContent = Math.floor(position/1000/60) + ":" + formatSeconds(Math.floor(position/1000%60));
+            position += 1000;
+            progressSlider.value = position;
+            progressSlider.style.background = `linear-gradient(to right,
+                #ffffff ${progressSlider.value/currrentSongDuration*100}%,
+                #ccc ${progressSlider.value/currrentSongDuration*100}%)`;
+            }
+        ,1000);
+    }
+
     displayPlayer();
 }
 
@@ -300,17 +326,24 @@ function changeSelectedPlaylist(playlistIndex) {
 const progressSlider = document.getElementById('musicProgress');
 progressSlider.addEventListener("input", (event) => {
     const sliderValue = progressSlider.value;
-    progressSlider.style.background = `linear-gradient(to right, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
+    progressSlider.style.background = `linear-gradient(to right, 
+        #1db954 ${sliderValue/currrentSongDuration*100}%, 
+        #ccc ${sliderValue/currrentSongDuration*100}%)`;
 });
 
 progressSlider.addEventListener("mouseover", (event) => {
     const sliderValue = progressSlider.value;
-    progressSlider.style.background = `linear-gradient(to right, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
+    progressSlider.style.background = `linear-gradient(to right,
+        #1db954 ${sliderValue/currrentSongDuration*100}%,
+        #ccc ${sliderValue/currrentSongDuration*100}%)`;
+
 });
 
 progressSlider.addEventListener("mouseout", (event) => {
     const sliderValue = progressSlider.value;
-    progressSlider.style.background = `linear-gradient(to right, #ffffff ${sliderValue}%, #ccc ${sliderValue}%)`;
+    progressSlider.style.background = `linear-gradient(to right,
+        #ffffff ${sliderValue/currrentSongDuration*100}%,
+        #ccc ${sliderValue/currrentSongDuration*100}%)`;
 });
 
 // For volume sliders interaction
@@ -452,6 +485,10 @@ playPauseButton.addEventListener("click", event => {
         player.pause().then(() => {
             play = false;
             state.className = "fa-solid fa-play";
+
+            if(musicPlayerTimer !== null) {
+                clearInterval(musicPlayerTimer);
+            }
         });
 
     } else {
@@ -463,17 +500,8 @@ playPauseButton.addEventListener("click", event => {
     playPauseButton.appendChild(state);
 });
 
-//TODO: Refresh token should be ok
-
-// TODO: Make time and progress bar work
-// Probs need to use the player_state_changed event and add a setInterval to loop every second and update the
-// progress bar. and when the user skips or rewinds the song need to reset the bar.
-// Probs different for seek.
-
-// Probably can also use this loop every second to check if the player volume is different from the one on the desktop app
-// if it is then update the variable and teh slider
-
+//TODO: Refresh token should be ok, need to double check, ez tho just use app
 // TODO: shuffle when user is not playing music on desktop app
 // TODO: try to make the selected playlist appear when user starts music from desktop app
 // TODO: maybe liked songs appear on the playlists too
-// TODO: change volume slider when user changes volume on desktop app
+// TODO: change volume slider when user changes volume on desktop app, can use setinterval for this feature
