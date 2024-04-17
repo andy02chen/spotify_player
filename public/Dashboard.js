@@ -217,7 +217,8 @@ async function connectWebPlaybackSDK() {
 
         console.log('Currently Playing', current_track);
         console.log('Position in Song', position);
-        console.log('Duration of Song', duration);
+
+        document.getElementById("finishTime").textContent = Math.floor(duration/1000/60) + ":" + formatSeconds(Math.floor(duration/1000%60))
 
         if(paused) {
             player.pause().then(() => {
@@ -236,6 +237,16 @@ async function connectWebPlaybackSDK() {
 
     player.connect();
     return true;
+}
+
+function formatSeconds(seconds) {
+    const num = seconds.toString();
+
+    if(num.length === 1) {
+        return "0" + num;
+    } else {
+        return num
+    }
 }
 
 // Updates music player
@@ -302,44 +313,37 @@ progressSlider.addEventListener("mouseout", (event) => {
     progressSlider.style.background = `linear-gradient(to right, #ffffff ${sliderValue}%, #ccc ${sliderValue}%)`;
 });
 
-// TODO: Make time and progress bar work
-// TODO: shuffle when user is not playing music on desktop app
-// TODO: try to make the selected playlist appear when user starts music from desktop app
-// TODO: maybe liked songs appear on the playlists too
-// TODO: change volume slider when user changes volume on desktop app
-
 // For volume sliders interaction
 // For muting
 volumeImageElement.addEventListener("click", event => {
-    if(!muted && volumeControl > 0) {
-        muted = true;
-        volumeImageElement.src = "imgs/volume-mute.png";
-        volumeImageElement.alt = "Mute";
 
+
+    if(!muted && volumeControl > 0) {
         player.setVolume(0).then(() => {
-            console.log('Volume muted!');
+            muted = true;
+            volumeImageElement.src = "imgs/volume-mute.png";
+            volumeImageElement.alt = "Mute";
         });
 
     } else {
-        muted = false;
-        switch(true) {    
-            case (volumeControl >= 1 && volumeControl < 34):
-                volumeImageElement.src = "imgs/volume-low.png";
-                volumeImageElement.alt = "Low";
-                break;
-    
-            case (volumeControl >= 34 && volumeControl < 67):
-                volumeImageElement.src = "imgs/volume-med.png";
-                volumeImageElement.alt = "Med";
-                break;
-    
-            case (volumeControl >= 67 && volumeControl <= 100):
-                volumeImageElement.src = "imgs/volume-high.png";
-                volumeImageElement.alt = "High";
-                break;
-        }
         player.setVolume(volumeControl/100).then(() => {
-            console.log('Volume unmuted!');
+            muted = false;
+            switch(true) {    
+                case (volumeControl >= 1 && volumeControl < 34):
+                    volumeImageElement.src = "imgs/volume-low.png";
+                    volumeImageElement.alt = "Low";
+                    break;
+        
+                case (volumeControl >= 34 && volumeControl < 67):
+                    volumeImageElement.src = "imgs/volume-med.png";
+                    volumeImageElement.alt = "Med";
+                    break;
+        
+                case (volumeControl >= 67 && volumeControl <= 100):
+                    volumeImageElement.src = "imgs/volume-high.png";
+                    volumeImageElement.alt = "High";
+                    break;
+            }
         });
     }
 });
@@ -458,3 +462,18 @@ playPauseButton.addEventListener("click", event => {
     }
     playPauseButton.appendChild(state);
 });
+
+//TODO: Refresh token should be ok
+
+// TODO: Make time and progress bar work
+// Probs need to use the player_state_changed event and add a setInterval to loop every second and update the
+// progress bar. and when the user skips or rewinds the song need to reset the bar.
+// Probs different for seek.
+
+// Probably can also use this loop every second to check if the player volume is different from the one on the desktop app
+// if it is then update the variable and teh slider
+
+// TODO: shuffle when user is not playing music on desktop app
+// TODO: try to make the selected playlist appear when user starts music from desktop app
+// TODO: maybe liked songs appear on the playlists too
+// TODO: change volume slider when user changes volume on desktop app
