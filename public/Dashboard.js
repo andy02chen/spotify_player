@@ -286,8 +286,18 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
             progressSlider.style.background = `linear-gradient(to right,
                 #ffffff ${progressSlider.value/currrentSongDuration*100}%,
                 #ccc ${progressSlider.value/currrentSongDuration*100}%)`;
-            }
-        ,1000);
+
+
+            player.getVolume().then(volume => {
+                const volumeDesktop = Math.floor(volume*100);
+                if(volumeDesktop !== volumeControl) {
+                    volumeControl = volumeDesktop;
+                    volumeSlider.value = volumeControl;
+                    changeVolumeImage(volumeControl);
+                    volumeSlider.style.background = `linear-gradient(to top, #1db954 ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
+                }
+            });
+        },1000);
     }
 
     displayPlayer();
