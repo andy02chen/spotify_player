@@ -13,6 +13,9 @@ let connected = false;
 let devID = null;
 let musicPlayerTimer = null;
 let currrentSongDuration = 0;
+let playlistURIs = [];
+let currPlayingPlaylistID = null;
+let playerShown = false;
 
 ////////////////////////////////
 // Being completely honest idk wha this code does
@@ -36,6 +39,16 @@ async function waitForSpotifyWebPlaybackSDKToLoad () {
 
 // Displays info about currently playing track
 function displayPlayer() {
+    //Display the currently playing playlist
+    if(currPlayingPlaylistID) {
+        for(let i = 0; i < playlistURIs.length; i++) {
+            if(currPlayingPlaylistID === playlistURIs[i]) {
+                changeSelectedPlaylist(i);
+                break;
+            }
+        }
+    }
+
     document.getElementById("notPlaying").style.display = "none";
 
     const player = document.getElementById("playing");
@@ -107,6 +120,10 @@ async function getUserPlayLists() {
     });
 
     const data = await result.json();
+    data.forEach(playlist => {
+        const playlistID = playlist.id;
+        playlistURIs.push(playlistID);
+    });
     displayPlaylists(data);
 }
 
@@ -166,6 +183,11 @@ async function getPlayBackState() {
         console.log('No playback state');
 
     } else if (result.status === 200) {
+        const currentlyPlaying = await result.json();
+        const getURI = currentlyPlaying.context.uri;
+        const parts = getURI.split(":");
+        currPlayingPlaylistID = parts[2];
+
         return true;
     } else {
         console.error('Something went wrong');
@@ -300,7 +322,10 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
         },1000);
     }
 
-    displayPlayer();
+    if(!playerShown) {
+        playerShown = true;
+        displayPlayer();
+    }
 }
 
 //Changes selected playlist
@@ -308,7 +333,11 @@ function changeSelectedPlaylist(playlistIndex) {
     const playlists = document.querySelectorAll(".playlist");
     const playlist = playlists[playlistIndex];
 
-    displayPlayer();
+    if(!playerShown) {
+        playerShown = true;
+        displayPlayer();
+    }
+    
 
     if(selectedPlaylist !== playlistIndex) {
         const playlistImg = playlist.getElementsByClassName("playlistImage")[0];
@@ -513,5 +542,3 @@ playPauseButton.addEventListener("click", event => {
 //TODO: Refresh token should be ok, need to double check, ez tho just use app
 // TODO: shuffle when user is not playing music on desktop app
 // TODO: try to make the selected playlist appear when user starts music from desktop app
-// TODO: maybe liked songs appear on the playlists too
-// TODO: change volume slider when user changes volume on desktop app, can use setinterval for this feature
