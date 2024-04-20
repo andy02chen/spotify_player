@@ -294,6 +294,7 @@ img {
 
 .spinLoopButton {
     animation: spin 2s linear infinite;
+    animation-fill-mode: both;
 }
 
 @keyframes spin {

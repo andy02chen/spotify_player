@@ -502,13 +502,43 @@ volumeSlider.addEventListener("mouseout", (event) => {
 const loopSong = document.getElementById("loopSong");
 let looping = false;
 
-loopSong.addEventListener("click", event => {
+loopSong.addEventListener("click", async event => {
+    const token = await fetch(redirect_uri + "getToken", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    const data = await token.json();
+
     if(!looping) {
-        looping = true;
-        loopSong.classList.add("spinLoopButton");
+        const response = await fetch("https://api.spotify.com/v1/me/player/repeat?state=track", {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${data.token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if(response.status === 204 || response.status === 202) {
+            looping = true;
+            loopSong.classList.add("spinLoopButton");
+        }
+        
     } else {
-        looping = false;
+        const response = await fetch("https://api.spotify.com/v1/me/player/repeat?state=context", {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${data.token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if(response.status === 204 || response.status === 202) {
+            looping = false;
         loopSong.classList.remove("spinLoopButton");
+        }
     }
 });
 
@@ -539,6 +569,7 @@ playPauseButton.addEventListener("click", event => {
     playPauseButton.appendChild(state);
 });
 
+
 //TODO: Refresh token should be ok, need to double check, ez tho just use app
 // TODO: shuffle when user is not playing music on desktop app
-// TODO: try to make the selected playlist appear when user starts music from desktop app
+//TODO: seek, next and previous buttons
