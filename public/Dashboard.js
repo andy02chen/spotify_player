@@ -569,6 +569,17 @@ playPauseButton.addEventListener("click", event => {
     playPauseButton.appendChild(state);
 });
 
+//For next and previous song
+const nextSongButton = document.getElementById("nextSong");
+const prevSongButton = document.getElementById('prevSong');
+
+nextSongButton.addEventListener("click", event => {
+    player.nextTrack();
+});
+
+prevSongButton.addEventListener("click", event => {
+    player.previousTrack();
+});
 
 //TODO: Refresh token should be ok, need to double check, ez tho just use app
 // TODO: shuffle when user is not playing music on desktop app
