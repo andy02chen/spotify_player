@@ -107,7 +107,7 @@ async function autoSwitchSpotifyPlayer(deviceID) {
         })
     });
 
-    console.log(response);
+    // console.log(response);
 }
 
 // Get request to get user's playlists
@@ -233,16 +233,24 @@ async function connectWebPlaybackSDK() {
         paused,
         position,
         duration,
-        track_window: { current_track }
+        track_window: { current_track },
+        context
     }) => {
-        
+        currPlayingPlaylistID = context.uri.split(":")[2];
+
+        if(currPlayingPlaylistID) {
+            for(let i = 0; i < playlistURIs.length; i++) {
+                if(currPlayingPlaylistID === playlistURIs[i]) {
+                    changeSelectedPlaylist(i);
+                    break;
+                }
+            }
+        }
+
         const image = current_track.album.images[0].url;
         const trackName = current_track.name;
         const artists = current_track.artists;
         currrentSongDuration = duration
-
-        console.log('Currently Playing', current_track);
-        console.log('Position in Song', position);
 
         if(paused) {
             player.pause().then(() => {
