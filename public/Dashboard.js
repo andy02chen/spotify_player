@@ -368,6 +368,11 @@ progressSlider.addEventListener("input", (event) => {
     progressSlider.style.background = `linear-gradient(to right, 
         #1db954 ${sliderValue/currrentSongDuration*100}%, 
         #ccc ${sliderValue/currrentSongDuration*100}%)`;
+
+    // Seek to a position in the track
+    player.seek(sliderValue).then(() => {
+        console.log('Changed position!');
+    });
 });
 
 progressSlider.addEventListener("mouseover", (event) => {
@@ -583,4 +588,3 @@ prevSongButton.addEventListener("click", event => {
 
 //TODO: Refresh token should be ok, need to double check, ez tho just use app
 // TODO: shuffle when user is not playing music on desktop app
-//TODO: seek, next and previous buttons
