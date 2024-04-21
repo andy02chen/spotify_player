@@ -319,3 +319,29 @@ img {
 .fade-in.show {
     opacity: 1;
 }
+
+#notPlaying {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#playingOnButton {
+    font-size: 1.25rem;
+    font-weight: bold;
+    padding: 30px 50px 30px;
+    border: none;
+    cursor: pointer;
+    border-radius: 50px;
+    background-color: 	hsl(141, 73%, 34%);
+    border: 2px solid black;
+    color: black;
+}
+
+#playingOnButton:hover {
+    background-color: hsla(141, 73%, 34%, 0.822);
+}
+
+#playingOnButton:active {
+    transform: scale(1.1);
+}

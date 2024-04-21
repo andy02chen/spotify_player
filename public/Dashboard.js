@@ -10,12 +10,13 @@ const volumeSlider = document.getElementById('volumeSlider');
 // Music Player
 let player = null;
 let connected = false;
-let devID = null;
 let musicPlayerTimer = null;
 let currrentSongDuration = 0;
 let playlistURIs = [];
 let currPlayingPlaylistID = null;
 let playerShown = false;
+let activeDevice = false;
+let devID = null;
 
 ////////////////////////////////
 // Being completely honest idk wha this code does
@@ -49,7 +50,7 @@ function displayPlayer() {
         }
     }
 
-    document.getElementById("notPlaying").style.display = "none";
+    document.getElementById("notPlaying").style.display = 'none';
 
     const player = document.getElementById("playing");
     const volume = document.getElementById("volume");
@@ -64,6 +65,11 @@ function displayPlayer() {
         player.classList.add("show");
         volume.classList.add("show");
     }, 100);
+
+    player.resume().then(() => {
+        play = true;
+        state.className = "fa-solid fa-pause";
+    });
 }
 
 export async function getDashboard() {
@@ -75,10 +81,24 @@ export async function getDashboard() {
     // Ready
     player.addListener('ready', async ({ device_id }) => {
         console.log('Ready with Device ID', device_id);
+        devID = device_id;
         if(await getPlayBackState() === true) {
-            await autoSwitchSpotifyPlayer(device_id);
+            // await autoSwitchSpotifyPlayer(device_id);
+
+            //TODO: display screen to switch player then display Player
+            
+            // displayPlayer();
         }
     });
+}
+
+function doYouWantToSwitchPlayer(device_name) {
+    document.getElementById('notPlayingText').style.display = 'none';
+    // switchDevice.style.display = 'block'; // or 'inline-block' depending on your layout needs
+    const switchDevice = document.getElementById('playingOn');
+    switchDevice.textContent += ` ${device_name}`;
+    switchDevice.style.display = 'flex';
+    document.getElementById('playingOnButton').style.display = 'flex';
 }
 
 // Auto switch spotify player
@@ -103,11 +123,11 @@ async function autoSwitchSpotifyPlayer(deviceID) {
             "device_ids": [
                 deviceID
             ],
-            play: false
+            play: true
         })
     });
 
-    // console.log(response);
+    displayPlayer();
 }
 
 // Get request to get user's playlists
@@ -184,9 +204,12 @@ async function getPlayBackState() {
 
     } else if (result.status === 200) {
         const currentlyPlaying = await result.json();
+        console.log(currentlyPlaying);
         const getURI = currentlyPlaying.context.uri;
         const parts = getURI.split(":");
         currPlayingPlaylistID = parts[2];
+
+        doYouWantToSwitchPlayer(currentlyPlaying.device.name);
 
         return true;
     } else {
@@ -229,7 +252,7 @@ async function connectWebPlaybackSDK() {
         return false;
     });
 
-    player.addListener('player_state_changed', ({
+    player.addListener('player_state_changed', async({
         paused,
         position,
         duration,
@@ -241,6 +264,7 @@ async function connectWebPlaybackSDK() {
         if(currPlayingPlaylistID) {
             for(let i = 0; i < playlistURIs.length; i++) {
                 if(currPlayingPlaylistID === playlistURIs[i]) {
+                    console.log('hi');
                     changeSelectedPlaylist(i);
                     break;
                 }
@@ -330,23 +354,47 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
         },1000);
     }
 
-    if(!playerShown) {
-        playerShown = true;
-        displayPlayer();
-    }
+    // if(!playerShown) {
+    //     playerShown = true;
+    //     displayPlayer();
+    // }
 }
 
 //Changes selected playlist
-function changeSelectedPlaylist(playlistIndex) {
+async function changeSelectedPlaylist(playlistIndex) {
     const playlists = document.querySelectorAll(".playlist");
     const playlist = playlists[playlistIndex];
 
-    if(!playerShown) {
-        playerShown = true;
-        displayPlayer();
+    // Get playlist information
+    const data = await getToken();
+
+    // Get playback state
+    const result = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[playlistIndex]}`, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${data.token}`
+        }
+    });
+
+    const playlistInfo = await result.json();
+    const numberOfTracks = playlistInfo.tracks.total;
+
+    //TODO: make array of ints
+    const arr = [];
+    for(let i = 0; i < numberOfTracks; i++) {
+        arr.push(i);
     }
+
+    console.log(arr);
+
+    //Show player if not already shown
+    // if(!playerShown) {
+    //     playerShown = true;
+    //     displayPlayer();
+    // }
     
 
+    //Apply effects for selected playlist
     if(selectedPlaylist !== playlistIndex) {
         const playlistImg = playlist.getElementsByClassName("playlistImage")[0];
 
@@ -594,5 +642,17 @@ prevSongButton.addEventListener("click", event => {
     player.previousTrack();
 });
 
+// Button for switching playback device
+const switchDeviceButton = document.getElementById("playingOnButton");
+switchDeviceButton.addEventListener("click", event => {
+    player.activateElement();
+    autoSwitchSpotifyPlayer(devID);
+});
+
 //TODO: Refresh token should be ok, need to double check, ez tho just use app
 // TODO: shuffle when user is not playing music on desktop app
+// maybe can get a list of integers and then randomise it
+// then in order play the song in the i-th index
+
+// TODO: maybe change how the transfer playback works bys using
+// https://developer.spotify.com/documentation/web-api/reference/get-information-about-the-users-current-playback
