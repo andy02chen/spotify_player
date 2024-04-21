@@ -82,13 +82,7 @@ export async function getDashboard() {
     player.addListener('ready', async ({ device_id }) => {
         console.log('Ready with Device ID', device_id);
         devID = device_id;
-        if(await getPlayBackState() === true) {
-            // await autoSwitchSpotifyPlayer(device_id);
-
-            //TODO: display screen to switch player then display Player
-            
-            // displayPlayer();
-        }
+        getPlayBackState();
     });
 }
 
@@ -127,7 +121,10 @@ async function autoSwitchSpotifyPlayer(deviceID) {
         })
     });
 
-    displayPlayer();
+    if(!playerShown) {
+        playerShown = true;
+        displayPlayer();
+    }
 }
 
 // Get request to get user's playlists
@@ -204,19 +201,15 @@ async function getPlayBackState() {
 
     } else if (result.status === 200) {
         const currentlyPlaying = await result.json();
-        console.log(currentlyPlaying);
+        volumeControl = currentlyPlaying.device.volume_percent;
         const getURI = currentlyPlaying.context.uri;
         const parts = getURI.split(":");
         currPlayingPlaylistID = parts[2];
 
         doYouWantToSwitchPlayer(currentlyPlaying.device.name);
-
-        return true;
     } else {
         console.error('Something went wrong');
     }
-
-    return false;
 }
 
 // Connect to player
@@ -259,22 +252,21 @@ async function connectWebPlaybackSDK() {
         track_window: { current_track },
         context
     }) => {
+        const image = current_track.album.images[0].url;
+        const trackName = current_track.name;
+        const artists = current_track.artists;
+        currrentSongDuration = duration
+
         currPlayingPlaylistID = context.uri.split(":")[2];
 
         if(currPlayingPlaylistID) {
             for(let i = 0; i < playlistURIs.length; i++) {
                 if(currPlayingPlaylistID === playlistURIs[i]) {
-                    console.log('hi');
                     changeSelectedPlaylist(i);
                     break;
                 }
             }
         }
-
-        const image = current_track.album.images[0].url;
-        const trackName = current_track.name;
-        const artists = current_track.artists;
-        currrentSongDuration = duration
 
         if(paused) {
             player.pause().then(() => {
@@ -353,11 +345,6 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
             });
         },1000);
     }
-
-    // if(!playerShown) {
-    //     playerShown = true;
-    //     displayPlayer();
-    // }
 }
 
 //Changes selected playlist
@@ -388,10 +375,10 @@ async function changeSelectedPlaylist(playlistIndex) {
     console.log(arr);
 
     //Show player if not already shown
-    // if(!playerShown) {
-    //     playerShown = true;
-    //     displayPlayer();
-    // }
+    if(!playerShown) {
+        playerShown = true;
+        displayPlayer();
+    }
     
 
     //Apply effects for selected playlist
@@ -653,6 +640,3 @@ switchDeviceButton.addEventListener("click", event => {
 // TODO: shuffle when user is not playing music on desktop app
 // maybe can get a list of integers and then randomise it
 // then in order play the song in the i-th index
-
-// TODO: maybe change how the transfer playback works bys using
-// https://developer.spotify.com/documentation/web-api/reference/get-information-about-the-users-current-playback
