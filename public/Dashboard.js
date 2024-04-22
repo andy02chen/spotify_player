@@ -168,6 +168,8 @@ async function autoSwitchSpotifyPlayer(deviceID) {
         })
     });
 
+    activeDevice = true;
+
     if(!playerShown) {
         playerShown = true;
         displayPlayerFromSwitch();
@@ -213,6 +215,10 @@ function displayPlaylists(playlists) {
 
         playlistDisplay.onclick = () => {
             changeSelectedPlaylist(i);
+            if(!activeDevice) {
+                autoSwitchSpotifyPlayer(devID);
+            }
+            
         }
 
         document.getElementById("playlists").appendChild(playlistDisplay);
@@ -456,10 +462,12 @@ async function changeSelectedPlaylist(playlistIndex) {
     });
 
     console.log(response);
-    if(response.status !== 204) {
-        console.error("Something went wrong with shuffling");
-    } else {
+
+
+    if(response.status === 204 || response.status === 202) {
         // TODO: add next song to queue
+    } else {
+        console.error("Something went wrong with shuffling");
     }
 
     //Show player if not already shown
@@ -724,8 +732,3 @@ switchDeviceButton.addEventListener("click", event => {
 });
 
 //TODO: Refresh token should be ok, need to double check, ez tho just use app
-// TODO: shuffle when user is not playing music on desktop app
-// maybe can get a list of integers and then randomise it
-// then in order play the song in the i-th index
-//TODO: bugged when desktop app is not playing playlist
-// TODO: currently shuffle only works when user is playing playlist music from desktop app
