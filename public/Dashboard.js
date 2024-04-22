@@ -248,12 +248,19 @@ async function getPlayBackState() {
 
     } else if (result.status === 200) {
         const currentlyPlaying = await result.json();
+        console.log('curr',currentlyPlaying);
         volumeControl = currentlyPlaying.device.volume_percent;
-        const getURI = currentlyPlaying.context.uri;
-        const parts = getURI.split(":");
-        currPlayingPlaylistID = parts[2];
+
+        if(currentlyPlaying.context != null) {
+            const getURI = currentlyPlaying.context.uri;
+            const parts = getURI.split(":");
+            currPlayingPlaylistID = parts[2];
+        }
 
         doYouWantToSwitchPlayer(currentlyPlaying.device.name);
+
+        // TODO: maybe need to add soething here when user is not playing a playlist
+        
     } else {
         console.error('Something went wrong');
     }
@@ -395,6 +402,7 @@ function shuffleArray(arr) {
 
 //Changes selected playlist
 async function changeSelectedPlaylist(playlistIndex) {
+    const limit = 100;
     const playlists = document.querySelectorAll(".playlist");
     const playlist = playlists[playlistIndex];
 
@@ -402,7 +410,7 @@ async function changeSelectedPlaylist(playlistIndex) {
     const data = await getToken();
 
     // Get playback state
-    const result = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[playlistIndex]}`, {
+    const result = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[playlistIndex]}?limit=${limit}`, {
         method: "GET",
         headers: {
             Authorization: `Bearer ${data.token}`
@@ -410,18 +418,32 @@ async function changeSelectedPlaylist(playlistIndex) {
     });
 
     const playlistInfo = await result.json();
+    console.log(playlistInfo);
     const numberOfTracks = playlistInfo.tracks.total;
 
-    //TODO: make array of ints, make shuffle function
     const arr = [];
     for(let i = 0; i < numberOfTracks; i++) {
         arr.push(i);
     }
 
+    // Shuffles array of ints to select which song to play
     const shuffled = shuffleArray(arr);
-    console.log(shuffled);
+    const firstSong = shuffled[0];
+    const songNumber = firstSong % limit;
+    const offset = firstSong - songNumber;
 
-    //here, need to get teh URI of track number shuffled[i]
+    // Fetches song info
+    const getFirstSong = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[playlistIndex]}?offset=${offset}
+    &limit=${limit}`, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${data.token}`
+        }
+    });
+
+    // Plays the first song
+    const firstSongInfo = await getFirstSong.json();
+    const firstSongURI = firstSongInfo.tracks.items[songNumber].track.uri;
     const response = await fetch("https://api.spotify.com/v1/me/player/play", {
         method: "PUT",
         headers: {
@@ -429,18 +451,22 @@ async function changeSelectedPlaylist(playlistIndex) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            "uris": [`spotify:track:${shuffled[0]}`]
+            "uris": [`${firstSongURI}`]
         })
     });
 
-    console.log(await response.json());
+    console.log(response);
+    if(response.status !== 204) {
+        console.error("Something went wrong with shuffling");
+    } else {
+        // TODO: add next song to queue
+    }
 
     //Show player if not already shown
     if(!playerShown) {
         playerShown = true;
         displayPlayer();
     }
-    
 
     //Apply effects for selected playlist
     if(selectedPlaylist !== playlistIndex) {
@@ -701,4 +727,5 @@ switchDeviceButton.addEventListener("click", event => {
 // TODO: shuffle when user is not playing music on desktop app
 // maybe can get a list of integers and then randomise it
 // then in order play the song in the i-th index
-//TODO: need to change the trasfer playback because the change selected playlist will shuffle
+//TODO: bugged when desktop app is not playing playlist
+// TODO: currently shuffle only works when user is playing playlist music from desktop app

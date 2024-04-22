@@ -70,7 +70,6 @@ app.post('/login', (req, res) => {
 	expiresIn = data.expires_in;
 
 	setInterval(refreshToken, 1000 * (expiresIn - 60));
-	// setInterval(refreshToken, 5000);
 	res.status(200).send("POST request to login was successful");
 	})
 	.catch(error => {
@@ -102,6 +101,7 @@ async function refreshToken() {
 		}
 		const tokens = await response.json();
 		accessToken = tokens.access_token;
+		console.log(accessToken);
 	})
 	.catch(error => {
 		console.error('Error refreshing token:', error);
