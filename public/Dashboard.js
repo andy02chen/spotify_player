@@ -65,11 +65,59 @@ function displayPlayer() {
         player.classList.add("show");
         volume.classList.add("show");
     }, 100);
+}
 
-    player.resume().then(() => {
-        play = true;
-        state.className = "fa-solid fa-pause";
-    });
+// Displays info about currently playing track after switching playback
+function displayPlayerFromSwitch() {
+    //Display the currently playing playlist
+    if(currPlayingPlaylistID) {
+        const playlists = document.querySelectorAll(".playlist");
+        
+
+        for(let i = 0; i < playlistURIs.length; i++) {
+            const playlist = playlists[i];
+            if(currPlayingPlaylistID === playlistURIs[i]) {
+                //Apply effects for selected playlist
+                if(selectedPlaylist !== i) {
+                    const playlistImg = playlist.getElementsByClassName("playlistImage")[0];
+
+                    playlist.classList.add("selectedPlaylist");
+                    playlistImg.classList.add("currentlyPlaying");
+
+                    const addImage = document.createElement("img");
+                    addImage.src = "imgs/playing.png";
+                    addImage.alt = "Image of currently playing playlist";
+                    addImage.classList.add("playingImg");
+                    playlist.appendChild(addImage);
+
+                    if(selectedPlaylist !== null) {
+                        playlists[selectedPlaylist].classList.remove("selectedPlaylist");
+                        playlists[selectedPlaylist].getElementsByClassName("playlistImage")[0].classList.remove("currentlyPlaying");
+                        playlists[selectedPlaylist].removeChild(playlists[selectedPlaylist].lastChild);
+                    }
+                    
+                    selectedPlaylist = i;  
+                }
+                break;
+            }
+        }
+    }
+
+    document.getElementById("notPlaying").style.display = 'none';
+
+    const player = document.getElementById("playing");
+    const volume = document.getElementById("volume");
+
+    player.classList.add("fade-in");
+    volume.classList.add("fade-in");
+
+    player.style.display = "block";
+    volume.style.display = "flex";
+
+    setTimeout(() => {
+        player.classList.add("show");
+        volume.classList.add("show");
+    }, 100);
 }
 
 export async function getDashboard() {
@@ -88,7 +136,6 @@ export async function getDashboard() {
 
 function doYouWantToSwitchPlayer(device_name) {
     document.getElementById('notPlayingText').style.display = 'none';
-    // switchDevice.style.display = 'block'; // or 'inline-block' depending on your layout needs
     const switchDevice = document.getElementById('playingOn');
     switchDevice.textContent += ` ${device_name}`;
     switchDevice.style.display = 'flex';
@@ -123,7 +170,7 @@ async function autoSwitchSpotifyPlayer(deviceID) {
 
     if(!playerShown) {
         playerShown = true;
-        displayPlayer();
+        displayPlayerFromSwitch();
     }
 }
 
@@ -259,15 +306,6 @@ async function connectWebPlaybackSDK() {
 
         currPlayingPlaylistID = context.uri.split(":")[2];
 
-        if(currPlayingPlaylistID) {
-            for(let i = 0; i < playlistURIs.length; i++) {
-                if(currPlayingPlaylistID === playlistURIs[i]) {
-                    changeSelectedPlaylist(i);
-                    break;
-                }
-            }
-        }
-
         if(paused) {
             player.pause().then(() => {
                 play = false;
@@ -340,11 +378,19 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
                     volumeControl = volumeDesktop;
                     volumeSlider.value = volumeControl;
                     changeVolumeImage(volumeControl);
-                    volumeSlider.style.background = `linear-gradient(to top, #1db954 ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
+                    volumeSlider.style.background = `linear-gradient(to top, #ffffff ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
                 }
             });
         },1000);
     }
+}
+
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
 }
 
 //Changes selected playlist
@@ -366,13 +412,28 @@ async function changeSelectedPlaylist(playlistIndex) {
     const playlistInfo = await result.json();
     const numberOfTracks = playlistInfo.tracks.total;
 
-    //TODO: make array of ints
+    //TODO: make array of ints, make shuffle function
     const arr = [];
     for(let i = 0; i < numberOfTracks; i++) {
         arr.push(i);
     }
 
-    console.log(arr);
+    const shuffled = shuffleArray(arr);
+    console.log(shuffled);
+
+    //here, need to get teh URI of track number shuffled[i]
+    const response = await fetch("https://api.spotify.com/v1/me/player/play", {
+        method: "PUT",
+        headers: {
+            "Authorization": `Bearer ${data.token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            "uris": [`spotify:track:${shuffled[0]}`]
+        })
+    });
+
+    console.log(await response.json());
 
     //Show player if not already shown
     if(!playerShown) {
@@ -640,3 +701,4 @@ switchDeviceButton.addEventListener("click", event => {
 // TODO: shuffle when user is not playing music on desktop app
 // maybe can get a list of integers and then randomise it
 // then in order play the song in the i-th index
+//TODO: need to change the trasfer playback because the change selected playlist will shuffle
