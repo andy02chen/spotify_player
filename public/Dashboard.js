@@ -17,6 +17,9 @@ let currPlayingPlaylistID = null;
 let playerShown = false;
 let activeDevice = false;
 let devID = null;
+let songCounter = 0;
+let arrOfSongPositions = [];
+let queueCounter = 0;
 
 ////////////////////////////////
 // Being completely honest idk wha this code does
@@ -122,15 +125,15 @@ function displayPlayerFromSwitch() {
 
 export async function getDashboard() {
     document.getElementById('main').style.display = 'flex';
-    getUserPlayLists();
 
     connected = await connectWebPlaybackSDK();
 
     // Ready
     player.addListener('ready', async ({ device_id }) => {
-        console.log('Ready with Device ID', device_id);
         devID = device_id;
+        
         getPlayBackState();
+        getUserPlayLists();
     });
 }
 
@@ -250,11 +253,9 @@ async function getPlayBackState() {
     });
 
     if(result.status === 204) {
-        console.log('No playback state');
-
+        
     } else if (result.status === 200) {
         const currentlyPlaying = await result.json();
-        console.log('curr',currentlyPlaying);
         volumeControl = currentlyPlaying.device.volume_percent;
 
         if(currentlyPlaying.context != null) {
@@ -330,7 +331,7 @@ async function connectWebPlaybackSDK() {
                 state.className = "fa-solid fa-pause";
             });
         }
-
+        console.log(queueCounter);
         updateMusicPlayer(image, trackName, artists, position, paused);
     });
 
@@ -376,7 +377,13 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
     }
 
     if(!paused) {
-        musicPlayerTimer = setInterval(() => {
+        musicPlayerTimer = setInterval(async() => {
+            if(position === 0) {
+                if(queueCounter !== 0) {
+                    queueCounter--;
+                }
+            }
+
             document.getElementById("startTime").textContent = Math.floor(position/1000/60) + ":" + formatSeconds(Math.floor(position/1000%60));
             position += 1000;
             progressSlider.value = position;
@@ -384,6 +391,40 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
                 #ffffff ${progressSlider.value/currrentSongDuration*100}%,
                 #ccc ${progressSlider.value/currrentSongDuration*100}%)`;
 
+            // If 2 seconds left in song and not looping add next song to playlist
+            if((currrentSongDuration - position <= 2500) && !looping && queueCounter === 0) {
+                const data = await getToken();
+                // Fetches next song info
+                const limit = 100;
+                const nextSong = getNextShuffledSong();
+                const nextSongNumber = nextSong % limit;
+                const nextOffset = nextSong - nextSongNumber;
+
+                const getSecondSong = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[selectedPlaylist]}/tracks?offset=${nextOffset}&limit=${limit}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${data.token}`
+                    }
+                });
+
+                const secondSongInfo = await getSecondSong.json();
+                const secondSongURI = secondSongInfo.items[nextSongNumber].track.uri;
+
+                const postNextSong = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${secondSongURI}`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${data.token}`,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                if(postNextSong.status === 204 || postNextSong.status === 202) {
+                    queueCounter++;
+                    console.log("Added next song to queue");
+                } else {
+                    console.error("Something went wrong with adding next song to queue");
+                }
+            }
 
             player.getVolume().then(volume => {
                 const volumeDesktop = Math.floor(volume*100);
@@ -398,22 +439,25 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
     }
 }
 
-function shuffleArray(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
+function getNextShuffledSong() {
+    const i = arrOfSongPositions.length - 1 - songCounter;
+    const j = Math.floor(Math.random() * (i + 1));
+    [arrOfSongPositions[i], arrOfSongPositions[j]] = [arrOfSongPositions[j], arrOfSongPositions[i]];
+
+    return arrOfSongPositions[arrOfSongPositions.length - 1 - songCounter++];
 }
 
 //Changes selected playlist
 async function changeSelectedPlaylist(playlistIndex) {
-    const limit = 100;
+    songCounter = 0;
+    const data = await getToken();
+
+    const limit = 50;
     const playlists = document.querySelectorAll(".playlist");
     const playlist = playlists[playlistIndex];
 
     // Get playlist information
-    const data = await getToken();
+    
 
     // Get playback state
     const result = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[playlistIndex]}?limit=${limit}`, {
@@ -424,23 +468,19 @@ async function changeSelectedPlaylist(playlistIndex) {
     });
 
     const playlistInfo = await result.json();
-    console.log(playlistInfo);
     const numberOfTracks = playlistInfo.tracks.total;
 
-    const arr = [];
     for(let i = 0; i < numberOfTracks; i++) {
-        arr.push(i);
+        arrOfSongPositions.push(i);
     }
 
     // Shuffles array of ints to select which song to play
-    const shuffled = shuffleArray(arr);
-    const firstSong = shuffled[0];
-    const songNumber = firstSong % limit;
-    const offset = firstSong - songNumber;
+    const firstSong = getNextShuffledSong();
+    const firstSongNumber = firstSong % limit;
+    const firstOffset = firstSong - firstSongNumber;
 
-    // Fetches song info
-    const getFirstSong = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[playlistIndex]}?offset=${offset}
-    &limit=${limit}`, {
+    // Fetches first song info
+    const getFirstSong = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[playlistIndex]}/tracks?offset=${firstOffset}&limit=${limit}`, {
         method: "GET",
         headers: {
             Authorization: `Bearer ${data.token}`
@@ -449,7 +489,7 @@ async function changeSelectedPlaylist(playlistIndex) {
 
     // Plays the first song
     const firstSongInfo = await getFirstSong.json();
-    const firstSongURI = firstSongInfo.tracks.items[songNumber].track.uri;
+    const firstSongURI = firstSongInfo.items[firstSongNumber].track.uri;
     const response = await fetch("https://api.spotify.com/v1/me/player/play", {
         method: "PUT",
         headers: {
@@ -461,11 +501,28 @@ async function changeSelectedPlaylist(playlistIndex) {
         })
     });
 
-    console.log(response);
-
-
     if(response.status === 204 || response.status === 202) {
-        // TODO: add next song to queue
+        //Apply effects for selected playlist
+        if(selectedPlaylist !== playlistIndex) {
+            const playlistImg = playlist.getElementsByClassName("playlistImage")[0];
+
+            playlist.classList.add("selectedPlaylist");
+            playlistImg.classList.add("currentlyPlaying");
+
+            const addImage = document.createElement("img");
+            addImage.src = "imgs/playing.png";
+            addImage.alt = "Image of currently playing playlist";
+            addImage.classList.add("playingImg");
+            playlist.appendChild(addImage);
+
+            if(selectedPlaylist !== null) {
+                playlists[selectedPlaylist].classList.remove("selectedPlaylist");
+                playlists[selectedPlaylist].getElementsByClassName("playlistImage")[0].classList.remove("currentlyPlaying");
+                playlists[selectedPlaylist].removeChild(playlists[selectedPlaylist].lastChild);
+            }
+            
+            selectedPlaylist = playlistIndex;  
+        }
     } else {
         console.error("Something went wrong with shuffling");
     }
@@ -475,41 +532,19 @@ async function changeSelectedPlaylist(playlistIndex) {
         playerShown = true;
         displayPlayer();
     }
-
-    //Apply effects for selected playlist
-    if(selectedPlaylist !== playlistIndex) {
-        const playlistImg = playlist.getElementsByClassName("playlistImage")[0];
-
-        playlist.classList.add("selectedPlaylist");
-        playlistImg.classList.add("currentlyPlaying");
-
-        const addImage = document.createElement("img");
-        addImage.src = "imgs/playing.png";
-        addImage.alt = "Image of currently playing playlist";
-        addImage.classList.add("playingImg");
-        playlist.appendChild(addImage);
-
-        if(selectedPlaylist !== null) {
-            playlists[selectedPlaylist].classList.remove("selectedPlaylist");
-            playlists[selectedPlaylist].getElementsByClassName("playlistImage")[0].classList.remove("currentlyPlaying");
-            playlists[selectedPlaylist].removeChild(playlists[selectedPlaylist].lastChild);
-        }
-        
-        selectedPlaylist = playlistIndex;  
-    }
 }
 
 //For progress sliders interaction
 const progressSlider = document.getElementById('musicProgress');
 progressSlider.addEventListener("input", (event) => {
     const sliderValue = progressSlider.value;
-    progressSlider.style.background = `linear-gradient(to right, 
-        #1db954 ${sliderValue/currrentSongDuration*100}%, 
-        #ccc ${sliderValue/currrentSongDuration*100}%)`;
+    
 
     // Seek to a position in the track
     player.seek(sliderValue).then(() => {
-        console.log('Changed position!');
+        progressSlider.style.background = `linear-gradient(to right, 
+        #1db954 ${sliderValue/currrentSongDuration*100}%, 
+        #ccc ${sliderValue/currrentSongDuration*100}%)`;
     });
 });
 
@@ -595,11 +630,11 @@ function changeVolumeImage(sliderValue) {
 volumeSlider.addEventListener("input", (event) => {
     let sliderValue = parseFloat(volumeSlider.value);
     volumeSlider.style.background = `linear-gradient(to top, #1db954 ${sliderValue}%, #ccc ${sliderValue}%)`;
-    changeVolumeImage(sliderValue);
+    
 
     volumeControl = sliderValue;
     player.setVolume(volumeControl/100).then(() => {
-        console.log('Volume updated!');
+        changeVolumeImage(sliderValue);
     });
 });
 
@@ -619,11 +654,11 @@ volumeSlider.addEventListener("wheel", (event) => {
     volumeSlider.value = Math.min(Math.max(min, newValue), max);
     volumeSlider.style.background = `linear-gradient(to top, #1db954 ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
 
-    changeVolumeImage(sliderValue);
+    
 
     volumeControl = parseFloat(volumeSlider.value);
     player.setVolume(volumeControl/100).then(() => {
-        console.log('Volume updated!');
+        changeVolumeImage(sliderValue);
     });
 });
 
@@ -716,7 +751,40 @@ playPauseButton.addEventListener("click", event => {
 const nextSongButton = document.getElementById("nextSong");
 const prevSongButton = document.getElementById('prevSong');
 
-nextSongButton.addEventListener("click", event => {
+nextSongButton.addEventListener("click", async event => {
+    if(queueCounter === 0) {
+        const data = await getToken();
+        // Fetches next song info
+        const limit = 100;
+        const nextSong = getNextShuffledSong();
+        const nextSongNumber = nextSong % limit;
+        const nextOffset = nextSong - nextSongNumber;
+
+        const getSecondSong = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[selectedPlaylist]}/tracks?offset=${nextOffset}&limit=${limit}`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${data.token}`
+            }
+        });
+
+        const secondSongInfo = await getSecondSong.json();
+        const secondSongURI = secondSongInfo.items[nextSongNumber].track.uri;
+
+        const postNextSong = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${secondSongURI}`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${data.token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if(postNextSong.status === 204 || postNextSong.status === 202) {
+            queueCounter++;
+            console.log("Added next song to queue");
+        } else {
+            console.error("Something went wrong with adding next song to queue");
+        }
+    }
     player.nextTrack();
 });
 
@@ -732,3 +800,6 @@ switchDeviceButton.addEventListener("click", event => {
 });
 
 //TODO: Refresh token should be ok, need to double check, ez tho just use app
+//TODO: need to make a slight fix so that the prev songs isnt played a bit before chaning
+//TODO: maybe add an up next feature
+// TODO: some bug when playing a track and not playlist
