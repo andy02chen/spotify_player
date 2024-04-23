@@ -330,7 +330,6 @@ async function connectWebPlaybackSDK() {
                 state.className = "fa-solid fa-pause";
             });
         }
-        console.log(queueCounter);
         updateMusicPlayer(image, trackName, artists, position, paused);
     });
 
@@ -408,6 +407,7 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
                 });
 
                 const secondSongInfo = await getSecondSong.json();
+                console.log(secondSongInfo);
                 const secondSongURI = secondSongInfo.items[nextSongNumber].track.uri;
 
                 const postNextSong = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${secondSongURI}`, {
@@ -447,6 +447,7 @@ function getNextShuffledSong() {
     const j = Math.floor(Math.random() * (i + 1));
     [arrOfSongPositions[i], arrOfSongPositions[j]] = [arrOfSongPositions[j], arrOfSongPositions[i]];
 
+    console.log(arrOfSongPositions[arrOfSongPositions.length - 1 - songCounter]);
     return arrOfSongPositions[arrOfSongPositions.length - 1 - songCounter++];
 }
 
@@ -481,6 +482,7 @@ async function changeSelectedPlaylist(playlistIndex) {
     const firstSong = getNextShuffledSong();
     const firstSongNumber = firstSong % limit;
     const firstOffset = firstSong - firstSongNumber;
+    console.log(firstSongNumber, firstOffset);
 
     // Fetches first song info
     const getFirstSong = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[playlistIndex]}/tracks?offset=${firstOffset}&limit=${limit}`, {
@@ -492,6 +494,7 @@ async function changeSelectedPlaylist(playlistIndex) {
 
     // Plays the first song
     const firstSongInfo = await getFirstSong.json();
+    console.log(firstSongInfo);
     const firstSongURI = firstSongInfo.items[firstSongNumber].track.uri;
     const response = await fetch("https://api.spotify.com/v1/me/player/play", {
         method: "PUT",
@@ -771,6 +774,7 @@ nextSongButton.addEventListener("click", async event => {
         });
 
         const secondSongInfo = await getSecondSong.json();
+        console.log(secondSongInfo);
         const secondSongURI = secondSongInfo.items[nextSongNumber].track.uri;
 
         const postNextSong = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${secondSongURI}`, {
@@ -784,11 +788,13 @@ nextSongButton.addEventListener("click", async event => {
         if(postNextSong.status === 204 || postNextSong.status === 202) {
             queueCounter++;
             console.log("Added next song to queue");
+            player.nextTrack();
         } else {
             console.error("Something went wrong with adding next song to queue");
         }
+    } else {
+        player.nextTrack();
     }
-    player.nextTrack();
 });
 
 prevSongButton.addEventListener("click", event => {
