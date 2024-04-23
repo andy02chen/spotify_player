@@ -167,7 +167,7 @@ async function autoSwitchSpotifyPlayer(deviceID) {
             "device_ids": [
                 deviceID
             ],
-            play: true
+            play: false
         })
     });
 
@@ -266,7 +266,6 @@ async function getPlayBackState() {
 
         doYouWantToSwitchPlayer(currentlyPlaying.device.name);
 
-        // TODO: maybe need to add soething here when user is not playing a playlist
         
     } else {
         console.error('Something went wrong');
@@ -379,7 +378,7 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
     if(!paused) {
         musicPlayerTimer = setInterval(async() => {
             if(position === 0) {
-                if(queueCounter !== 0) {
+                if(queueCounter > 0) {
                     queueCounter--;
                 }
             }
@@ -392,7 +391,8 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
                 #ccc ${progressSlider.value/currrentSongDuration*100}%)`;
 
             // If 2 seconds left in song and not looping add next song to playlist
-            if((currrentSongDuration - position <= 2500) && !looping && queueCounter === 0) {
+            if((currrentSongDuration - position <= 3000) && !looping && queueCounter === 0) {
+                queueCounter++;
                 const data = await getToken();
                 // Fetches next song info
                 const limit = 100;
@@ -419,7 +419,6 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
                 });
 
                 if(postNextSong.status === 204 || postNextSong.status === 202) {
-                    queueCounter++;
                     console.log("Added next song to queue");
                 } else {
                     console.error("Something went wrong with adding next song to queue");
@@ -440,6 +439,10 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
 }
 
 function getNextShuffledSong() {
+    if(songCounter === arrOfSongPositions.length) {
+        songCounter = 0;
+    }
+
     const i = arrOfSongPositions.length - 1 - songCounter;
     const j = Math.floor(Math.random() * (i + 1));
     [arrOfSongPositions[i], arrOfSongPositions[j]] = [arrOfSongPositions[j], arrOfSongPositions[i]];
@@ -800,6 +803,7 @@ switchDeviceButton.addEventListener("click", event => {
 });
 
 //TODO: Refresh token should be ok, need to double check, ez tho just use app
-//TODO: need to make a slight fix so that the prev songs isnt played a bit before chaning
+//TODO: need to make a slight fix so that the prev songs isnt played a bit before chaning (DONE?)
 //TODO: maybe add an up next feature
-// TODO: some bug when playing a track and not playlist
+// TODO: some bug when playing a track and not playlist (DONE?)
+//TODO: bug still adding multiple songs to queue but not really an issue tbh
