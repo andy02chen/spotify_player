@@ -424,16 +424,6 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
                     console.error("Something went wrong with adding next song to queue");
                 }
             }
-
-            player.getVolume().then(volume => {
-                const volumeDesktop = Math.floor(volume*100);
-                if(volumeDesktop !== volumeControl) {
-                    volumeControl = volumeDesktop;
-                    volumeSlider.value = volumeControl;
-                    changeVolumeImage(volumeControl);
-                    volumeSlider.style.background = `linear-gradient(to top, #ffffff ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
-                }
-            });
         },1000);
     }
 }
@@ -758,6 +748,12 @@ const nextSongButton = document.getElementById("nextSong");
 const prevSongButton = document.getElementById('prevSong');
 
 nextSongButton.addEventListener("click", async event => {
+
+    if(looping) {
+        loopSong.classList.remove("spinLoopButton");
+        looping = false;
+    }
+
     if(queueCounter === 0) {
         const data = await getToken();
         // Fetches next song info
@@ -812,4 +808,5 @@ switchDeviceButton.addEventListener("click", event => {
 //TODO: need to make a slight fix so that the prev songs isnt played a bit before chaning (DONE?)
 //TODO: maybe add an up next feature
 // TODO: some bug when playing a track and not playlist (DONE?)
-//TODO: bug still adding multiple songs to queue but not really an issue tbh
+// TODO: fix bug when listen to podcast
+// TODO: fix previous song button because queue doesnt keep track of the previous songs
