@@ -21,6 +21,7 @@ let songCounter = 0;
 let arrOfSongPositions = [];
 let queueCounter = 0;
 let playingType = null;
+const limit = 50;
 
 ////////////////////////////////
 // Being completely honest idk wha this code does
@@ -403,7 +404,6 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
                 queueCounter++;
                 const data = await getToken();
                 // Fetches next song info
-                const limit = 100;
                 const nextSong = getNextShuffledSong();
                 const nextSongNumber = nextSong % limit;
                 const nextOffset = nextSong - nextSongNumber;
@@ -442,12 +442,13 @@ function getNextShuffledSong() {
         songCounter = 0;
     }
 
-    const i = arrOfSongPositions.length - 1 - songCounter;
+    const i = arrOfSongPositions.length - 1 - songCounter++;
     const j = Math.floor(Math.random() * (i + 1));
     [arrOfSongPositions[i], arrOfSongPositions[j]] = [arrOfSongPositions[j], arrOfSongPositions[i]];
 
-    console.log(arrOfSongPositions[arrOfSongPositions.length - 1 - songCounter]);
-    return arrOfSongPositions[arrOfSongPositions.length - 1 - songCounter++];
+    console.log(arrOfSongPositions[i]);
+    console.log('sc', songCounter, i, arrOfSongPositions.length);
+    return arrOfSongPositions[i];
 }
 
 //Changes selected playlist
@@ -455,7 +456,6 @@ async function changeSelectedPlaylist(playlistIndex) {
     songCounter = 0;
     const data = await getToken();
 
-    const limit = 50;
     const playlists = document.querySelectorAll(".playlist");
     const playlist = playlists[playlistIndex];
 
@@ -761,7 +761,6 @@ function delay(ms) {
 }
 
 nextSongButton.addEventListener("click", async event => {
-
     if(looping) {
         loopSong.classList.remove("spinLoopButton");
         looping = false;
@@ -771,7 +770,6 @@ nextSongButton.addEventListener("click", async event => {
         if(queueCounter === 0) {
             const data = await getToken();
             // Fetches next song info
-            const limit = 100;
             const nextSong = getNextShuffledSong();
             const nextSongNumber = nextSong % limit;
             const nextOffset = nextSong - nextSongNumber;
@@ -809,8 +807,54 @@ nextSongButton.addEventListener("click", async event => {
     }
 });
 
-prevSongButton.addEventListener("click", event => {
-    player.previousTrack();
+prevSongButton.addEventListener("click", async event => {
+    if(looping) {
+        loopSong.classList.remove("spinLoopButton");
+        looping = false;
+    }
+
+    if(playingType !== "playlist") {
+        if(songCounter > 1 && queueCounter === 0) {
+            const data = await getToken();
+            console.log('sc', songCounter);
+            console.log(arrOfSongPositions[arrOfSongPositions.length - --songCounter]);
+
+            const prevSong = arrOfSongPositions[arrOfSongPositions.length - songCounter];
+            const prevSongNumber = prevSong % limit;
+            const prevSongOffset = prevSong - prevSongNumber;
+            console.log(prevSongNumber, prevSongOffset);
+
+            const getPrevSong = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[selectedPlaylist]}/tracks?offset=${prevSongOffset}&limit=${limit}`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${data.token}`
+                }
+            });
+
+            const prevSongInfo = await getPrevSong.json();
+            console.log(prevSongInfo);
+            const prevSongURI = prevSongInfo.items[prevSongNumber].track.uri;
+
+            const postPrevSong = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${prevSongURI}`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${data.token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if(postPrevSong.status === 204 || postPrevSong.status === 202) {
+                queueCounter++;
+                console.log("Added prev song to queue");
+                await delay(500);
+                player.nextTrack();
+            } else {
+                console.error("Something went wrong with adding prev song to queue");
+            }
+        }
+    } else {
+        player.previousTrack();
+    }
 });
 
 // Button for switching playback device
@@ -823,5 +867,6 @@ switchDeviceButton.addEventListener("click", event => {
 //TODO: Refresh token should be ok, need to double check, ez tho just use app
 // TODO: fix bug when listen to podcast
 //TODO: fix bug when trying to skip song while paused, and access token refreshed
-//TODO: fix bug when trying to skip too fast
+//TODO: disable prev button if not able to go to prev (e.g. gone as far back as possible using my shuffle implementation)
+//TODO: fix bug when trying to skip too fast (just disable buttons and enable when usable)
 // TODO: prev song button need fix for my own shuffle
