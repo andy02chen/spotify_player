@@ -20,6 +20,7 @@ let devID = null;
 let songCounter = 0;
 let arrOfSongPositions = [];
 let queueCounter = 0;
+let playingType = null;
 
 ////////////////////////////////
 // Being completely honest idk wha this code does
@@ -256,6 +257,14 @@ async function getPlayBackState() {
         
     } else if (result.status === 200) {
         const currentlyPlaying = await result.json();
+        console.log(currentlyPlaying);
+
+        if(currentlyPlaying.context !== null) {
+            if(currentlyPlaying.context.type === "playlist") {
+                playingType = "playlist";
+            }
+        }
+
         volumeControl = currentlyPlaying.device.volume_percent;
 
         if(currentlyPlaying.context != null) {
@@ -390,7 +399,7 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
                 #ccc ${progressSlider.value/currrentSongDuration*100}%)`;
 
             // If 2 seconds left in song and not looping add next song to playlist
-            if((currrentSongDuration - position <= 3000) && !looping && queueCounter === 0) {
+            if((currrentSongDuration - position <= 3500) && !looping && queueCounter === 0) {
                 queueCounter++;
                 const data = await getToken();
                 // Fetches next song info
@@ -747,6 +756,10 @@ playPauseButton.addEventListener("click", event => {
 const nextSongButton = document.getElementById("nextSong");
 const prevSongButton = document.getElementById('prevSong');
 
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 nextSongButton.addEventListener("click", async event => {
 
     if(looping) {
@@ -754,39 +767,42 @@ nextSongButton.addEventListener("click", async event => {
         looping = false;
     }
 
-    if(queueCounter === 0) {
-        const data = await getToken();
-        // Fetches next song info
-        const limit = 100;
-        const nextSong = getNextShuffledSong();
-        const nextSongNumber = nextSong % limit;
-        const nextOffset = nextSong - nextSongNumber;
+    if(playingType !== "playlist") {
+        if(queueCounter === 0) {
+            const data = await getToken();
+            // Fetches next song info
+            const limit = 100;
+            const nextSong = getNextShuffledSong();
+            const nextSongNumber = nextSong % limit;
+            const nextOffset = nextSong - nextSongNumber;
 
-        const getSecondSong = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[selectedPlaylist]}/tracks?offset=${nextOffset}&limit=${limit}`, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${data.token}`
+            const getSecondSong = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[selectedPlaylist]}/tracks?offset=${nextOffset}&limit=${limit}`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${data.token}`
+                }
+            });
+
+            const secondSongInfo = await getSecondSong.json();
+            console.log(secondSongInfo);
+            const secondSongURI = secondSongInfo.items[nextSongNumber].track.uri;
+
+            const postNextSong = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${secondSongURI}`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${data.token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if(postNextSong.status === 204 || postNextSong.status === 202) {
+                queueCounter++;
+                console.log("Added next song to queue");
+                await delay(500);
+                player.nextTrack();
+            } else {
+                console.error("Something went wrong with adding next song to queue");
             }
-        });
-
-        const secondSongInfo = await getSecondSong.json();
-        console.log(secondSongInfo);
-        const secondSongURI = secondSongInfo.items[nextSongNumber].track.uri;
-
-        const postNextSong = await fetch(`https://api.spotify.com/v1/me/player/queue?uri=${secondSongURI}`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${data.token}`,
-                "Content-Type": "application/json"
-            }
-        });
-
-        if(postNextSong.status === 204 || postNextSong.status === 202) {
-            queueCounter++;
-            console.log("Added next song to queue");
-            player.nextTrack();
-        } else {
-            console.error("Something went wrong with adding next song to queue");
         }
     } else {
         player.nextTrack();
@@ -805,8 +821,7 @@ switchDeviceButton.addEventListener("click", event => {
 });
 
 //TODO: Refresh token should be ok, need to double check, ez tho just use app
-//TODO: need to make a slight fix so that the prev songs isnt played a bit before chaning (DONE?)
-//TODO: maybe add an up next feature
-// TODO: some bug when playing a track and not playlist (DONE?)
 // TODO: fix bug when listen to podcast
-// TODO: fix previous song button because queue doesnt keep track of the previous songs
+//TODO: fix bug when trying to skip song while paused, and access token refreshed
+//TODO: fix bug when trying to skip too fast
+// TODO: prev song button need fix for my own shuffle

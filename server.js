@@ -69,7 +69,7 @@ app.post('/login', (req, res) => {
     refresh_token = data.refresh_token;
 	expiresIn = data.expires_in;
 
-	setInterval(refreshToken, 1000 * (expiresIn - 60));
+	setInterval(refreshToken, 1000 * (expiresIn - 120));
 	res.status(200).send("POST request to login was successful");
 	})
 	.catch(error => {
