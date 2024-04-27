@@ -22,6 +22,7 @@ let arrOfSongPositions = [];
 let queueCounter = 0;
 let playingType = null;
 const limit = 50;
+let shuffledLength = 0;
 
 ////////////////////////////////
 // Being completely honest idk wha this code does
@@ -129,6 +130,8 @@ export async function getDashboard() {
     document.getElementById('main').style.display = 'flex';
 
     connected = await connectWebPlaybackSDK();
+    prevSongButton.style.cursor = 'not-allowed';
+    prevSongButton.disabled = true;
 
     // Ready
     player.addListener('ready', async ({ device_id }) => {
@@ -438,17 +441,25 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
 }
 
 function getNextShuffledSong() {
-    if(songCounter === arrOfSongPositions.length) {
+    if(shuffledLength === arrOfSongPositions.length) {
         songCounter = 0;
+        const i = arrOfSongPositions.length - 1 - songCounter++;
+        return arrOfSongPositions[i];
+    } else if (songCounter < shuffledLength && shuffledLength > 0) {
+        const i = arrOfSongPositions.length - 1 - songCounter++;
+        console.log(arrOfSongPositions[i]);
+        console.log('sc', songCounter);
+        return arrOfSongPositions[i];
+    } else {
+        const i = arrOfSongPositions.length - 1 - songCounter++;
+        const j = Math.floor(Math.random() * (i + 1));
+        [arrOfSongPositions[i], arrOfSongPositions[j]] = [arrOfSongPositions[j], arrOfSongPositions[i]];
+
+        console.log(arrOfSongPositions[i]);
+        console.log('sc', songCounter, i, arrOfSongPositions.length);
+        shuffledLength++;
+        return arrOfSongPositions[i];
     }
-
-    const i = arrOfSongPositions.length - 1 - songCounter++;
-    const j = Math.floor(Math.random() * (i + 1));
-    [arrOfSongPositions[i], arrOfSongPositions[j]] = [arrOfSongPositions[j], arrOfSongPositions[i]];
-
-    console.log(arrOfSongPositions[i]);
-    console.log('sc', songCounter, i, arrOfSongPositions.length);
-    return arrOfSongPositions[i];
 }
 
 //Changes selected playlist
@@ -761,6 +772,9 @@ function delay(ms) {
 }
 
 nextSongButton.addEventListener("click", async event => {
+    nextSongButton.style.cursor = 'not-allowed';
+    nextSongButton.disabled = true;
+
     if(looping) {
         loopSong.classList.remove("spinLoopButton");
         looping = false;
@@ -798,6 +812,7 @@ nextSongButton.addEventListener("click", async event => {
                 console.log("Added next song to queue");
                 await delay(500);
                 player.nextTrack();
+                console.log(songCounter, shuffledLength);
             } else {
                 console.error("Something went wrong with adding next song to queue");
             }
@@ -805,9 +820,20 @@ nextSongButton.addEventListener("click", async event => {
     } else {
         player.nextTrack();
     }
+
+    nextSongButton.style.cursor = 'pointer';
+    nextSongButton.disabled = false;
+
+    if(songCounter > 0) {
+        prevSongButton.style.cursor = 'pointer';
+        prevSongButton.disabled = false;
+    }
 });
 
 prevSongButton.addEventListener("click", async event => {
+    prevSongButton.style.cursor = 'not-allowed';
+    prevSongButton.disabled = true;
+
     if(looping) {
         loopSong.classList.remove("spinLoopButton");
         looping = false;
@@ -816,8 +842,9 @@ prevSongButton.addEventListener("click", async event => {
     if(playingType !== "playlist") {
         if(songCounter > 1 && queueCounter === 0) {
             const data = await getToken();
-            console.log('sc', songCounter);
+            
             console.log(arrOfSongPositions[arrOfSongPositions.length - --songCounter]);
+            console.log('sc', songCounter);
 
             const prevSong = arrOfSongPositions[arrOfSongPositions.length - songCounter];
             const prevSongNumber = prevSong % limit;
@@ -848,12 +875,21 @@ prevSongButton.addEventListener("click", async event => {
                 console.log("Added prev song to queue");
                 await delay(500);
                 player.nextTrack();
+                console.log(songCounter, shuffledLength);
             } else {
                 console.error("Something went wrong with adding prev song to queue");
             }
         }
     } else {
         player.previousTrack();
+    }
+
+    prevSongButton.style.cursor = 'pointer';
+    prevSongButton.disabled = false;
+
+    if(songCounter === 1) {
+        prevSongButton.style.cursor = 'not-allowed';
+        prevSongButton.disabled = true;
     }
 });
 
@@ -869,4 +905,4 @@ switchDeviceButton.addEventListener("click", event => {
 //TODO: fix bug when trying to skip song while paused, and access token refreshed
 //TODO: disable prev button if not able to go to prev (e.g. gone as far back as possible using my shuffle implementation)
 //TODO: fix bug when trying to skip too fast (just disable buttons and enable when usable)
-// TODO: prev song button need fix for my own shuffle
+//TODO: test when playlist is completely shuffled
