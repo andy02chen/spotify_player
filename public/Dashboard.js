@@ -392,9 +392,15 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
 
     if(!paused) {
         musicPlayerTimer = setInterval(async() => {
+
             if(position === 0) {
                 if(queueCounter > 0) {
                     queueCounter--;
+                }
+
+                if(songCounter > 1) {
+                    prevSongButton.style.cursor = 'pointer';
+                    prevSongButton.disabled = false;
                 }
             }
 
