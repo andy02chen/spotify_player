@@ -459,6 +459,9 @@ function getNextShuffledSong() {
 
 //Changes selected playlist
 async function changeSelectedPlaylist(playlistIndex) {
+    if(playingType !== 'shuffled') {
+        playingType = 'shuffled';
+    }
     songCounter = 0;
     const data = await getToken();
 
@@ -501,7 +504,7 @@ async function changeSelectedPlaylist(playlistIndex) {
     const firstSongInfo = await getFirstSong.json();
     console.log(firstSongInfo);
     const firstSongURI = firstSongInfo.items[firstSongNumber].track.uri;
-    const response = await fetch("https://api.spotify.com/v1/me/player/play", {
+    const response = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${devID}`, {
         method: "PUT",
         headers: {
             "Authorization": `Bearer ${data.token}`,
