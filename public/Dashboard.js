@@ -130,6 +130,7 @@ export async function getDashboard() {
     document.getElementById('main').style.display = 'flex';
 
     connected = await connectWebPlaybackSDK();
+
     prevSongButton.style.cursor = 'not-allowed';
     prevSongButton.disabled = true;
 
@@ -148,6 +149,8 @@ function doYouWantToSwitchPlayer(device_name) {
     switchDevice.textContent += ` ${device_name}`;
     switchDevice.style.display = 'flex';
     document.getElementById('playingOnButton').style.display = 'flex';
+    prevSongButton.style.cursor = 'pointer';
+    prevSongButton.disabled = false;
 }
 
 // Auto switch spotify player
