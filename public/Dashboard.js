@@ -451,7 +451,9 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
 
 function getNextShuffledSong() {
     if(shuffledLength === arrOfSongPositions.length) {
-        songCounter = 0;
+        if(songCounter === arrOfSongPositions.length) {
+            songCounter = 0;
+        }
         const i = arrOfSongPositions.length - 1 - songCounter++;
         return arrOfSongPositions[i];
     } else if (songCounter < shuffledLength && shuffledLength > 0) {
@@ -903,7 +905,5 @@ switchDeviceButton.addEventListener("click", event => {
     autoSwitchSpotifyPlayer(devID);
 });
 
-//TODO: Refresh token should be ok, need to double check, ez tho just use app
 // TODO: fix bug when listen to podcast
-//TODO: fix bug when trying to skip song while paused, and access token refreshed
-//TODO: test when playlist is completely shuffled
+//TODO: fix bug when trying to skip song while paused, and access token refreshed (maybe cannot fix)
