@@ -24,6 +24,11 @@ let playingType = null;
 const limit = 50;
 let shuffledLength = 0;
 
+let storeSongArtist = null;
+let storeSongName = null;
+
+let geniusAuth = false;
+
 ////////////////////////////////
 // Being completely honest idk wha this code does
 // But I been debugging this for a while now
@@ -329,8 +334,8 @@ async function connectWebPlaybackSDK() {
         context
     }) => {
         const image = current_track.album.images[0].url;
-        const trackName = current_track.name;
-        const artists = current_track.artists;
+        storeSongName = current_track.name;
+        storeSongArtist = current_track.artists;
         currrentSongDuration = duration
 
         currPlayingPlaylistID = context.uri.split(":")[2];
@@ -346,7 +351,7 @@ async function connectWebPlaybackSDK() {
                 state.className = "fa-solid fa-pause";
             });
         }
-        updateMusicPlayer(image, trackName, artists, position, paused);
+        updateMusicPlayer(image, position, paused);
     });
 
     player.connect();
@@ -365,8 +370,8 @@ function formatSeconds(seconds) {
 
 // Updates music player
 // Try to make a smooth transition
-function updateMusicPlayer(image, trackName, artists, position, paused) {
-    let artistsDisplay = artists.map(artist => artist.name).join(", ");
+function updateMusicPlayer(image, position, paused) {
+    let artistsDisplay = storeSongArtist.map(artist => artist.name).join(", ");
 
     const songImage = document.getElementById("songImage");
     const songName = document.getElementById("songName");
@@ -378,9 +383,9 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
         #ccc ${progressSlider.value/currrentSongDuration*100}%)`;
 
     songImage.src = image;
-    songImage.alt = `Image of ${trackName} by ${artistsDisplay}`;
+    songImage.alt = `Image of ${storeSongName} by ${artistsDisplay}`;
 
-    songName.textContent = trackName;
+    songName.textContent = storeSongName;
     songArtist.textContent = artistsDisplay;
 
     document.getElementById("finishTime").textContent = Math.floor(currrentSongDuration/1000/60) + ":" + formatSeconds(Math.floor(currrentSongDuration/1000%60))
@@ -419,6 +424,7 @@ function updateMusicPlayer(image, trackName, artists, position, paused) {
                 const nextSong = getNextShuffledSong();
                 const nextSongNumber = nextSong % limit;
                 const nextOffset = nextSong - nextSongNumber;
+                console.log(nextSongNumber, nextOffset);
 
                 const getSecondSong = await fetch(`https://api.spotify.com/v1/playlists/${playlistURIs[selectedPlaylist]}/tracks?offset=${nextOffset}&limit=${limit}`, {
                     method: "GET",
@@ -905,5 +911,21 @@ switchDeviceButton.addEventListener("click", event => {
     autoSwitchSpotifyPlayer(devID);
 });
 
+// Lyrics Button
+// const lyricsButton = document.getElementById("lyricsButton");
+// lyricsButton.addEventListener("click", async event => {
+
+//     console.log(storeSongName, storeSongArtist[0].name);
+//     const lyrics = await fetch(redirect_uri + `lyrics?artist=${storeSongArtist[0].name}&title=${storeSongName}`, {
+//         method: "GET",
+//         headers: {
+//             "Content-Type": "application/json"
+//         }
+//     });
+
+//     console.log(await lyrics.json());
+// });
+
 // TODO: fix bug when listen to podcast
-//TODO: fix bug when trying to skip song while paused, and access token refreshed (maybe cannot fix)
+//TODO: fix bug when trying to skip song while paused
+//TODO: add lyrics and translations for non English

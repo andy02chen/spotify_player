@@ -3,7 +3,7 @@ const session = require('express-session');
 const app = express();
 require('dotenv').config();
 const port = process.env.PORT || 3000;
-const path = require('path')
+const path = require('path');
 
 const AUTHENTICATION_URL = 'https://accounts.spotify.com/authorize';
 const TOKEN = 'https://accounts.spotify.com/api/token';
@@ -18,6 +18,7 @@ app.use(express.json());
 let accessToken;
 let refresh_token;
 let expiresIn;
+let geniusToken;
 
 // Home page
 app.get('/', (req, res) => {
@@ -50,32 +51,47 @@ app.post('/login', (req, res) => {
 	let body = `grant_type=authorization_code&code=${code}&redirect_uri=${redirect_uri}`;
 
 	fetch(TOKEN, {
-    method: "POST",
-    headers: {
-		"Content-Type": "application/x-www-form-urlencoded",
-		"Authorization": "Basic " + btoa(client_id + ":" + client_secret) 
-    },
-	body: body
+		method: "POST",
+		headers: {
+			"Content-Type": "application/x-www-form-urlencoded",
+			"Authorization": "Basic " + btoa(client_id + ":" + client_secret) 
+		},
+		body: body
 	})
 	.then(response => {
-	if (!response.ok) {
-		console.log(response)
-		throw new Error('Bad Request');
-	}
-	return response.json();
+		if (!response.ok) {
+			console.log(response)
+			throw new Error('Bad Request');
+		}
+			return response.json();
 	})
 	.then(data => {
-	accessToken = data.access_token;
-    refresh_token = data.refresh_token;
-	expiresIn = data.expires_in;
+		accessToken = data.access_token;
+		refresh_token = data.refresh_token;
+		expiresIn = data.expires_in;
 
-	setInterval(refreshToken, 1000 * (expiresIn - 120));
-	res.status(200).send("POST request to login was successful");
+		setInterval(refreshToken, 1000 * (expiresIn - 120));
+		res.status(200).send("POST request to login was successful");
 	})
-	.catch(error => {
-	console.error('Error:', error);
-});
+		.catch(error => {
+		console.error('Error:', error);
+	});
 })
+
+// Genius Authentication
+app.post('/lyrics/login', (req, res) => {
+	geniusToken = req.body.code;
+	if(geniusToken) {
+		res.status(200).send("POST request to login was successful");;
+	} else {
+		console.error('Error, no genius token:', error);
+	}
+});
+
+// Get Lyrics
+app.get('/lyrics', async (req, res) => {
+
+});
 
 //Refresh access token
 async function refreshToken() {
@@ -101,7 +117,6 @@ async function refreshToken() {
 		}
 		const tokens = await response.json();
 		accessToken = tokens.access_token;
-		console.log(accessToken);
 	})
 	.catch(error => {
 		console.error('Error refreshing token:', error);

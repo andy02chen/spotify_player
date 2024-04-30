@@ -190,11 +190,6 @@ img {
     margin-left: 10px;
 }
 
-.useless {
-    pointer-events: none;
-    visibility: hidden;
-}
-
 #musicProgress{
     appearance: none;
     width: 100%;
