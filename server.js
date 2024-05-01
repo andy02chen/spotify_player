@@ -4,17 +4,13 @@ const app = express();
 require('dotenv').config();
 const port = process.env.PORT || 3000;
 const path = require('path');
-const { getLyrics, getSong } = require('genius-lyrics-api');
 
 const AUTHENTICATION_URL = 'https://accounts.spotify.com/authorize';
 const TOKEN = 'https://accounts.spotify.com/api/token';
-const geniusTOKEN = "https://api.genius.com/oauth/token";
 const redirect_uri = process.env.REDIRECT_URI;
 const client_id = process.env.CLIENT_ID;
 const scope = process.env.SCOPE;
 const client_secret = process.env.CLIENT_SECRET;
-const geniusClientSecret = process.env.GENIUS_CLIENT_SECRET;
-const geniusClientID = process.env.GENIUS_CLIENT_ID;
 
 app.use(express.static(path.join(__dirname, '/public')))
 app.use(express.json());
@@ -34,11 +30,6 @@ app.get('/getToken', (req, res) => {
 	res.send({token:accessToken});
 });
 
-// Returns the users genius token
-app.get('/getGeniusToken', (req, res) => {
-	res.send({token:geniusAccessToken});
-});
-
 // Get User Playlists
 app.get('/getPlaylists', async(req, res) => {
 	const result = await fetch("https://api.spotify.com/v1/me/playlists", {
@@ -53,17 +44,6 @@ app.get('/getPlaylists', async(req, res) => {
 		res.send(data.items);
 	}
 })
-
-//LOGIN for genius
-app.get('/loginGenius', (req, res) => {
-	let url = 'https://api.genius.com/oauth/authorize'
-    url += "?client_id=" + geniusClientID;
-    url += "&redirect_uri=" + redirect_uri;
-    url += '&scope=me';
-    url += '&state=SOME_STATE_VALUE';
-    url += "&response_type=code";
-	res.redirect(url);
-});
 
 //Login endpoint
 app.get('/login', (req, res) => {
@@ -113,55 +93,6 @@ app.post('/login', (req, res) => {
 		console.error('Error:', error);
 	});
 })
-
-// Genius Authentication
-app.post('/lyrics/login', (req, res) => {
-	code = req.body.code;
-
-	fetch(geniusTOKEN, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json"
-		},
-		body: JSON.stringify({
-			"code": code,
-			"client_secret": geniusClientSecret,
-			"grant_type": "authorization_code",
-			"client_id": geniusClientID,
-			"redirect_uri": "http://localhost:3000/",
-			"response_type": "code"
-		})
-	})
-	.then(response => {
-		if (!response.ok) {
-			throw new Error('Failed to fetch access token');
-		}
-			return response.json();
-	})
-	.then(data => {
-		geniusAccessToken = data.access_token;
-		res.status(200).send("POST request to login was successful");
-	})
-	.catch(error => {
-		console.error(error);
-	});
-});
-
-// Get Lyrics
-app.get('/lyrics', async (req, res) => {
-	const options = {
-		apiKey: geniusAccessToken,
-		title: req.query.title,
-		artist: req.query.artist,
-		optimizeQuery: true
-	};
-	
-	getLyrics(options).then((lyrics) => console.log(lyrics));
-	
-	getSong(options).then((song) =>
-		console.log(`${song.id} - ${song.title} - ${song.url} - ${song.albumArt} - ${song.lyrics}`)
-	);
-});
 
 //Refresh access token
 async function refreshToken() {

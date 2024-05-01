@@ -1,4 +1,4 @@
-import {getLoginPage, postLogin, postGeniusCode, getGeniusToken} from './Login.js';
+import {getLoginPage, postLogin} from './Login.js';
 import {getDashboard, getToken} from './Dashboard.js';
 
 const AUTHENTICATION_URL = 'https://accounts.spotify.com/authorize';
@@ -28,13 +28,7 @@ async function getHomePage() {
     const serverSpotifyCode = await getToken();
     if(serverSpotifyCode.token === null) {
         const codeSpotify = getCode();
-        codeSpotify ? (await postLogin(codeSpotify), window.location.href = redirect_uri + 'loginGenius') : getLoginPage();
-    }
-
-    const serverGeniusCode = await getGeniusToken();
-    if(serverGeniusCode.token === null) {
-        const codeGenius = getCode();
-        codeGenius ? (await postGeniusCode(codeGenius), getDashboard()) : getLoginPage();
+        codeSpotify ? (await postLogin(codeSpotify), getDashboard()) : getLoginPage();
     }
 }
 
