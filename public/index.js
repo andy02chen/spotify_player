@@ -1,5 +1,5 @@
-import {loginUser, getLoginPage, postLogin, geniusAuthentication, postGeniusCode} from './Login.js';
-import {getDashboard} from './Dashboard.js';
+import {getLoginPage, postLogin, postGeniusCode, getGeniusToken} from './Login.js';
+import {getDashboard, getToken} from './Dashboard.js';
 
 const AUTHENTICATION_URL = 'https://accounts.spotify.com/authorize';
 const TOKEN = 'https://accounts.spotify.com/api/token';
@@ -9,10 +9,9 @@ const redirect_uri = "http://localhost:3000/";
 const scope = "streaming user-read-email user-read-private user-library-read user-read-playback-state user-modify-playback-state user-library-modify playlist-read-private";
 
 let selectedPlaylist = null;
-
 const loginButton = document.getElementById('login');
 loginButton.addEventListener('click', () => {
-    loginUser();
+    window.location.href = redirect_uri + 'login';
 });
 
 // First function called when page is loaded
@@ -26,13 +25,17 @@ window.addEventListener("load", (event) => {
 
 // Display Home Page
 async function getHomePage() {
-    let codeSpotify = getCode();
-    let codeGenius = getCode();
-    console.log(codeGenius);
+    const serverSpotifyCode = await getToken();
+    if(serverSpotifyCode.token === null) {
+        const codeSpotify = getCode();
+        codeSpotify ? (await postLogin(codeSpotify), window.location.href = redirect_uri + 'loginGenius') : getLoginPage();
+    }
 
-    // If not code received, display login page
-    codeSpotify ? geniusAuthentication() : getLoginPage();
-    codeGenius ? (await postLogin(codeSpotify), await postGeniusCode(codeGenius),getDashboard()) : geniusAuthentication();
+    const serverGeniusCode = await getGeniusToken();
+    if(serverGeniusCode.token === null) {
+        const codeGenius = getCode();
+        codeGenius ? (await postGeniusCode(codeGenius), getDashboard()) : getLoginPage();
+    }
 }
 
 // Get code from URL

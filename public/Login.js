@@ -4,25 +4,16 @@ const scope = "streaming user-read-email user-read-private user-library-read use
 const client_id = "9bfeafafb36c47e0a8f222704f2a38c9";
 const genius_client_id = "PvfyX2FXpIV8iT0quPCXQqB2B57Rb9sXV8b3_r76E3gqgf6IYFv1CHIZhPkq-dcs";
 
-// Login to Spotify
-export function loginUser() {
-    let url = AUTHENTICATION_URL;
-    url += "?client_id=" + client_id;
-    url += "&response_type=code";
-    url += "&redirect_uri=" + redirect_uri;
-    url += "&scope=" + scope;
-    url += "&show_dialog=true";
-    window.location.href = url;
-}
-
 // Genius Authentication
-export function geniusAuthentication() {
-    let url = `https://api.genius.com/oauth/authorize?
-    client_id=YOUR_CLIENT_ID&${genius_client_id}&
-    redirect_uri=${redirect_uri}&
-    response_type=code
-    `
-}
+// export function geniusAuthentication() {
+//     let url = 'https://api.genius.com/oauth/authorize'
+//     url += "?client_id=" + genius_client_id;
+//     url += "&redirect_uri=" + redirect_uri;
+//     url += '&scope=me';
+//     url += '&state=SOME_STATE_VALUE';
+//     url += "&response_type=code";
+//     window.location.href = url;
+// }
 
 // Post to Server
 export async function postLogin(code) {
@@ -42,6 +33,19 @@ export async function postLogin(code) {
             reject();
         }
     });
+}
+
+// Get genius access token
+export async function getGeniusToken() {
+    //Get Token
+    const token = await fetch(redirect_uri + "getGeniusToken", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    return await token.json();
 }
 
 //POST to server genius

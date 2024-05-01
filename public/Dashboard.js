@@ -241,7 +241,7 @@ function displayPlaylists(playlists) {
     }
 }
 
-async function getToken() {
+export async function getToken() {
     //Get Token
     const token = await fetch(redirect_uri + "getToken", {
         method: "GET",
@@ -912,19 +912,19 @@ switchDeviceButton.addEventListener("click", event => {
 });
 
 // Lyrics Button
-// const lyricsButton = document.getElementById("lyricsButton");
-// lyricsButton.addEventListener("click", async event => {
+const lyricsButton = document.getElementById("lyricsButton");
+lyricsButton.addEventListener("click", async event => {
 
-//     console.log(storeSongName, storeSongArtist[0].name);
-//     const lyrics = await fetch(redirect_uri + `lyrics?artist=${storeSongArtist[0].name}&title=${storeSongName}`, {
-//         method: "GET",
-//         headers: {
-//             "Content-Type": "application/json"
-//         }
-//     });
+    console.log(storeSongName, storeSongArtist[0].name);
+    const lyrics = await fetch(redirect_uri + `lyrics?artist=${storeSongArtist[0].name}&title=${storeSongName}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
 
-//     console.log(await lyrics.json());
-// });
+    // console.log(await lyrics.json());
+});
 
 // TODO: fix bug when listen to podcast
 //TODO: fix bug when trying to skip song while paused
