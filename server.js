@@ -4,7 +4,8 @@ const app = express();
 require('dotenv').config();
 const port = process.env.PORT || 3000;
 const path = require('path');
-const { getLyrics, getSong } = require('genius-lyrics-api');
+const Genius = require("genius-lyrics");
+let Client = null;
 
 const AUTHENTICATION_URL = 'https://accounts.spotify.com/authorize';
 const TOKEN = 'https://accounts.spotify.com/api/token';
@@ -140,6 +141,7 @@ app.post('/lyrics/login', (req, res) => {
 	})
 	.then(data => {
 		geniusAccessToken = data.access_token;
+		Client = new Genius.Client(geniusAccessToken);
 		res.status(200).send("POST request to login was successful");
 	})
 	.catch(error => {
@@ -149,18 +151,18 @@ app.post('/lyrics/login', (req, res) => {
 
 // Get Lyrics
 app.get('/lyrics', async (req, res) => {
-	const options = {
-		apiKey: geniusAccessToken,
-		title: req.query.title,
-		artist: req.query.artist,
-		optimizeQuery: true
-	};
+
+	const searches = await Client.songs.search(req.query.title);
+	console.log(searches);
+
+	// Pick first one
+	const firstSong = searches[0];
 	
-	getLyrics(options).then((lyrics) => console.log(lyrics));
-	
-	getSong(options).then((song) =>
-		console.log(`${song.id} - ${song.title} - ${song.url} - ${song.albumArt} - ${song.lyrics}`)
-	);
+	console.log("About the Song:\n", firstSong, "\n");
+
+	// Ok lets get the lyrics
+	const lyrics = await firstSong.lyrics();
+	console.log("Lyrics of the Song:\n", lyrics, "\n");
 });
 
 //Refresh access token
