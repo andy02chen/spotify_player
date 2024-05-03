@@ -336,3 +336,7 @@ img {
 #playingOnButton:hover {
     background-color: hsla(141, 73%, 34%, 0.822);
 }
+
+#placeHolder {
+    display: none;
+}

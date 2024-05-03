@@ -456,6 +456,7 @@ function updateMusicPlayer(image, position, paused) {
 }
 
 function getNextShuffledSong() {
+    console.log(shuffledLength, songCounter);
     if(shuffledLength === arrOfSongPositions.length) {
         if(songCounter === arrOfSongPositions.length) {
             songCounter = 0;
@@ -480,6 +481,7 @@ async function changeSelectedPlaylist(playlistIndex) {
         playingType = 'shuffled';
     }
     songCounter = 0;
+    shuffledLength = 0;
     const data = await getToken();
 
     const playlists = document.querySelectorAll(".playlist");
@@ -909,21 +911,6 @@ const switchDeviceButton = document.getElementById("playingOnButton");
 switchDeviceButton.addEventListener("click", event => {
     player.activateElement();
     autoSwitchSpotifyPlayer(devID);
-});
-
-// Lyrics Button
-const lyricsButton = document.getElementById("lyricsButton");
-lyricsButton.addEventListener("click", async event => {
-
-    console.log(storeSongName, storeSongArtist[0].name);
-    const lyrics = await fetch(redirect_uri + `lyrics?artist=${storeSongArtist[0].name}&title=${storeSongName}`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json"
-        }
-    });
-
-    // console.log(await lyrics.json());
 });
 
 // TODO: fix bug when listen to podcast
