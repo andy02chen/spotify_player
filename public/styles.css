@@ -338,5 +338,6 @@ img {
 }
 
 #placeHolder {
-    display: none;
+    visibility: hidden;
+    width: 30px;
 }
