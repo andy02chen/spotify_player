@@ -445,7 +445,7 @@ function updateMusicPlayer(image, position, paused) {
                     }
                 });
 
-                if(postNextSong.status === 204 || postNextSong.status === 202) {
+                if(postNextSong.ok) {
                     console.log("Added next song to queue");
                 } else {
                     console.error("Something went wrong with adding next song to queue");
@@ -534,7 +534,7 @@ async function changeSelectedPlaylist(playlistIndex) {
         })
     });
 
-    if(response.status === 204 || response.status === 202) {
+    if(response.ok) {
         //Apply effects for selected playlist
         if(selectedPlaylist !== playlistIndex) {
             const playlistImg = playlist.getElementsByClassName("playlistImage")[0];
@@ -825,7 +825,7 @@ nextSongButton.addEventListener("click", async event => {
                 }
             });
 
-            if(postNextSong.status === 204 || postNextSong.status === 202) {
+            if(postNextSong.ok) {
                 queueCounter++;
                 console.log("Added next song to queue");
                 await delay(500);
@@ -884,7 +884,7 @@ prevSongButton.addEventListener("click", async event => {
                 }
             });
 
-            if(postPrevSong.status === 204 || postPrevSong.status === 202) {
+            if(postPrevSong.ok) {
                 queueCounter++;
                 console.log("Added prev song to queue");
                 await delay(500);
